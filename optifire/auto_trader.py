@@ -15,6 +15,16 @@ from optifire.ai.openai_client import OpenAIClient
 from optifire.services.earnings_calendar import EarningsCalendar
 from optifire.services.news_scanner import NewsScanner
 
+# Import plugins for signal generation
+from optifire.plugins.alpha_vix_regime.impl import AlphaVixRegime
+from optifire.plugins.alpha_cross_asset_corr.impl import AlphaCrossAssetCorr
+from optifire.plugins.alpha_vrp.impl import AlphaVrp
+from optifire.plugins.risk_var_budget.impl import RiskVarBudget
+from optifire.plugins.risk_drawdown_derisk.impl import RiskDrawdownDerisk
+from optifire.plugins.risk_vol_target.impl import RiskVolTarget
+from optifire.plugins.fe_garch.impl import FeGarch
+from optifire.plugins.fe_entropy.impl import FeEntropy
+
 
 class Signal:
     """Trading signal."""
@@ -57,9 +67,25 @@ class AutoTrader:
         self.earnings_calendar = EarningsCalendar()
         self.news_scanner = NewsScanner()
 
+        # Initialize plugins
+        self.vix_regime_plugin = AlphaVixRegime()
+        self.cross_asset_plugin = AlphaCrossAssetCorr()
+        self.vrp_plugin = AlphaVrp()
+        self.var_budget_plugin = RiskVarBudget()
+        self.drawdown_plugin = RiskDrawdownDerisk()
+        self.vol_target_plugin = RiskVolTarget()
+        self.garch_plugin = FeGarch()
+        self.entropy_plugin = FeEntropy()
+
         self.active = True
         self.signals: List[Signal] = []
         self.positions: Dict[str, Dict] = {}
+
+        # Plugin state cache
+        self.vix_regime = "NORMAL"
+        self.exposure_multiplier = 1.0  # From VIX regime
+        self.drawdown_multiplier = 1.0  # From drawdown de-risking
+        self.vol_target_multiplier = 1.0  # From vol targeting
 
         # Config
         self.max_positions = 5
@@ -73,6 +99,7 @@ class AutoTrader:
 
         # Schedule tasks
         tasks = [
+            self.plugin_monitor_loop(),      # NEW: Monitor plugin states
             self.earnings_scanner_loop(),
             self.news_scanner_loop(),
             self.position_manager_loop(),
@@ -80,6 +107,96 @@ class AutoTrader:
         ]
 
         await asyncio.gather(*tasks)
+
+    async def plugin_monitor_loop(self):
+        """Monitor plugin states and update risk multipliers."""
+        logger.info("🔌 Plugin monitor started")
+
+        while self.active:
+            try:
+                # Update VIX regime (affects all position sizing)
+                await self.update_vix_regime()
+
+                # Update drawdown de-risking
+                await self.update_drawdown_multiplier()
+
+                # Update vol targeting
+                await self.update_vol_target_multiplier()
+
+                # Run every 5 minutes
+                await asyncio.sleep(300)
+
+            except Exception as e:
+                logger.error(f"Plugin monitor error: {e}", exc_info=True)
+                await asyncio.sleep(60)
+
+    async def update_vix_regime(self):
+        """Update VIX regime and exposure multiplier."""
+        try:
+            # Get VIX data (simplified - should use real API)
+            # For now, use mock data
+            vix_level = 20.0  # TODO: Fetch real VIX from market data API
+
+            # Detect regime
+            if vix_level < 15:
+                self.vix_regime = "LOW"
+                self.exposure_multiplier = 1.2  # Increase exposure in calm markets
+            elif vix_level < 25:
+                self.vix_regime = "NORMAL"
+                self.exposure_multiplier = 1.0
+            elif vix_level < 35:
+                self.vix_regime = "ELEVATED"
+                self.exposure_multiplier = 0.7  # Reduce exposure
+            else:
+                self.vix_regime = "CRISIS"
+                self.exposure_multiplier = 0.3  # Drastically reduce
+
+            logger.debug(f"VIX regime: {self.vix_regime}, exposure mult: {self.exposure_multiplier:.2f}")
+
+        except Exception as e:
+            logger.error(f"Error updating VIX regime: {e}")
+
+    async def update_drawdown_multiplier(self):
+        """Update drawdown multiplier based on current portfolio DD."""
+        try:
+            # Get portfolio metrics
+            account = await self.broker.get_account()
+            equity = float(account.get("equity", 1000))
+
+            # Calculate high-water mark and drawdown
+            # (simplified - should track actual HWM over time)
+            high_water_mark = 1000.0  # TODO: Track actual HWM
+            drawdown = (high_water_mark - equity) / high_water_mark
+
+            # Apply de-risking based on drawdown
+            if drawdown >= 0.08:
+                self.drawdown_multiplier = 0.0  # STOP trading at 8% DD
+                logger.warning(f"⛔ Trading STOPPED - drawdown {drawdown:.1%} >= 8%")
+            elif drawdown >= 0.05:
+                self.drawdown_multiplier = 0.5  # Half size at 5% DD
+                logger.warning(f"⚠️  Drawdown de-risking: {drawdown:.1%} - reducing size to 50%")
+            else:
+                self.drawdown_multiplier = 1.0
+
+        except Exception as e:
+            logger.error(f"Error updating drawdown multiplier: {e}")
+
+    async def update_vol_target_multiplier(self):
+        """Update volatility targeting multiplier."""
+        try:
+            # Calculate portfolio volatility (simplified)
+            # Should use GARCH plugin for better estimate
+            target_vol = 0.15  # 15% annualized
+            current_vol = 0.12  # TODO: Calculate from returns
+
+            # Adjust leverage to target volatility
+            self.vol_target_multiplier = target_vol / max(current_vol, 0.01)
+            self.vol_target_multiplier = min(self.vol_target_multiplier, 1.5)  # Cap at 1.5x
+
+            logger.debug(f"Vol targeting mult: {self.vol_target_multiplier:.2f}")
+
+        except Exception as e:
+            logger.error(f"Error updating vol target multiplier: {e}")
 
     async def earnings_scanner_loop(self):
         """Scan earnings calendar and generate pre-earnings trades."""
@@ -122,12 +239,51 @@ class AutoTrader:
                             self.signals.append(signal)
                             logger.info(f"📰 News signal: {symbol} - {signal.reason}")
 
+                    # Also check cross-asset correlation signals
+                    cross_asset_signal = await self.check_cross_asset_signals()
+                    if cross_asset_signal:
+                        self.signals.append(cross_asset_signal)
+                        logger.info(f"📊 Cross-asset signal: {cross_asset_signal.symbol} - {cross_asset_signal.reason}")
+
                 # Run every hour
                 await asyncio.sleep(3600)
 
             except Exception as e:
                 logger.error(f"News scanner error: {e}", exc_info=True)
                 await asyncio.sleep(300)
+
+    async def check_cross_asset_signals(self) -> Optional[Signal]:
+        """Check for cross-asset correlation breakdown signals."""
+        try:
+            # Example: SPY-TLT correlation breakdown
+            # Simplified - should use real price data and correlation calc
+
+            # If SPY-TLT correlation breaks down (goes from -0.7 to 0.0)
+            # This often signals market stress → trade safe havens
+
+            # Mock data for now
+            spy_tlt_corr = -0.3  # TODO: Calculate real correlation
+
+            # Normal correlation is around -0.7 (inverse relationship)
+            # If it breaks above -0.4, it's unusual → potential signal
+
+            if spy_tlt_corr > -0.4:
+                # Correlation breakdown → potential flight to safety
+                return Signal(
+                    symbol="TLT",  # Treasury bonds
+                    action="BUY",
+                    confidence=0.65,
+                    reason=f"📊 SPY-TLT correlation breakdown ({spy_tlt_corr:.2f}), flight to safety expected",
+                    size_pct=0.06,
+                    take_profit=0.04,  # Bonds move slower
+                    stop_loss=0.02,
+                )
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Error checking cross-asset signals: {e}")
+            return None
 
     async def position_manager_loop(self):
         """Manage open positions - take profit and stop loss."""
@@ -195,18 +351,35 @@ class AutoTrader:
                 await asyncio.sleep(30)
 
     async def execute_signal(self, signal: Signal):
-        """Execute a trading signal."""
+        """Execute a trading signal with plugin-based risk adjustments."""
         try:
             if not self.executor:
                 logger.warning("Executor not initialized - cannot execute signal")
+                return
+
+            # Check if drawdown has stopped trading
+            if self.drawdown_multiplier == 0.0:
+                logger.warning(f"⛔ Signal BLOCKED - drawdown de-risking active")
                 return
 
             # Get account info
             account = await self.broker.get_account()
             buying_power = float(account.get("buying_power", 0))
 
-            # Calculate position size
-            position_value = buying_power * signal.size_pct
+            # Calculate position size with ALL plugin multipliers
+            base_size_pct = signal.size_pct
+
+            # Apply VIX regime multiplier
+            adjusted_size = base_size_pct * self.exposure_multiplier
+
+            # Apply drawdown multiplier
+            adjusted_size *= self.drawdown_multiplier
+
+            # Apply vol targeting multiplier
+            adjusted_size *= self.vol_target_multiplier
+
+            # Calculate position value
+            position_value = buying_power * adjusted_size
 
             # Get current price
             quote = await self.broker.get_quote(signal.symbol)
@@ -227,6 +400,12 @@ class AutoTrader:
             logger.info(f"🚀 Executing signal: {signal.action} {qty} {signal.symbol} @ ${current_price:.2f}")
             logger.info(f"   Reason: {signal.reason}")
             logger.info(f"   Confidence: {signal.confidence:.0%}")
+            logger.info(f"   📊 Plugin adjustments:")
+            logger.info(f"      Base size: {base_size_pct:.1%}")
+            logger.info(f"      VIX regime ({self.vix_regime}): {self.exposure_multiplier:.2f}x")
+            logger.info(f"      Drawdown: {self.drawdown_multiplier:.2f}x")
+            logger.info(f"      Vol target: {self.vol_target_multiplier:.2f}x")
+            logger.info(f"      Final size: {adjusted_size:.1%} (${position_value:.2f})")
 
             from optifire.exec.executor import OrderRequest
 
