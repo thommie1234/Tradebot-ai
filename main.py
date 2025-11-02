@@ -15,6 +15,7 @@ from optifire.core.bus import EventBus
 from optifire.exec.broker_alpaca import AlpacaBroker
 from optifire.ai.openai_client import OpenAIClient
 from optifire.api.server import create_app
+from optifire.auto_trader import AutoTrader
 
 # Load environment variables manually
 def load_env_file(filepath="secrets.env"):
@@ -44,6 +45,8 @@ class GlobalState:
         self.bus: EventBus = None
         self.broker: AlpacaBroker = None
         self.openai: OpenAIClient = None
+        self.auto_trader: AutoTrader = None
+        self.auto_trader_task = None
         self.app = None
 
     async def initialize(self):
@@ -132,14 +135,37 @@ plugins:
         # Attach global state to app
         self.app.state.g = self
 
+        # Initialize auto-trader
+        auto_trading_enabled = os.getenv("AUTO_TRADING_ENABLED", "true").lower() == "true"
+        if auto_trading_enabled:
+            self.auto_trader = AutoTrader(broker=self.broker, db=self.db)
+            # Start auto-trader in background
+            self.auto_trader_task = asyncio.create_task(self.auto_trader.start())
+            logger.info("✓ Auto-trader started (earnings scanner, news scanner, position manager)")
+        else:
+            logger.info("⚠ Auto-trading disabled (set AUTO_TRADING_ENABLED=true to enable)")
+
         logger.info("✓ All systems initialized")
         logger.info("=" * 60)
 
     async def shutdown(self):
         """Shutdown all services."""
         logger.info("Shutting down...")
+
+        # Stop auto-trader
+        if self.auto_trader:
+            await self.auto_trader.stop()
+            if self.auto_trader_task:
+                self.auto_trader_task.cancel()
+                try:
+                    await self.auto_trader_task
+                except asyncio.CancelledError:
+                    pass
+
+        # Stop event bus
         if self.bus:
             await self.bus.stop()
+
         logger.info("Shutdown complete")
 
 
