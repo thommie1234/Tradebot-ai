@@ -1,56 +1,71 @@
 """
-alpha_cross_asset_corr implementation.
+alpha_cross_asset_corr - Cross-asset correlation monitor.
 FULL IMPLEMENTATION
 """
 from typing import Dict, Any
+import numpy as np
 from optifire.plugins import Plugin, PluginMetadata, PluginContext, PluginResult
 from optifire.core.logger import logger
 
+
 class AlphaCrossAssetCorr(Plugin):
     """
-    Cross-asset correlation monitor
+    SPY-TLT correlation monitor.
 
-    Inputs: ['SPY', 'DXY']
-    Outputs: ['correlation', 'signal']
+    Normal: -0.7 (inverse relationship)
+    Breakdown: > -0.4 (both assets moving same direction = stress)
     """
 
     def describe(self) -> PluginMetadata:
         return PluginMetadata(
             plugin_id="alpha_cross_asset_corr",
-            name="CROSS-ASSET correlation monitor",
+            name="Cross-Asset Correlation",
             category="alpha",
             version="1.0.0",
             author="OptiFIRE",
-            description="Cross-asset correlation monitor",
-            inputs=['SPY', 'DXY'],
+            description="Monitor SPY-TLT correlation for regime shifts",
+            inputs=['spy_returns', 'tlt_returns'],
             outputs=['correlation', 'signal'],
-            est_cpu_ms=300,
-            est_mem_mb=30,
+            est_cpu_ms=200,
+            est_mem_mb=20,
         )
 
     def plan(self) -> Dict[str, Any]:
         return {
-            "schedule": "@open",
-            "triggers": ["market_open"],
-            "dependencies": ["market_data"],
+            "schedule": "@daily",
+            "triggers": ["market_close"],
+            "dependencies": [],
         }
 
     async def run(self, context: PluginContext) -> PluginResult:
-        """Execute alpha_cross_asset_corr logic."""
+        """Calculate SPY-TLT correlation."""
         try:
-            logger.info(f"Running {self.metadata.plugin_id}...")
+            # Mock returns (in production: fetch from broker)
+            spy_returns = context.params.get("spy_returns", np.random.normal(0.001, 0.015, 60))
+            tlt_returns = context.params.get("tlt_returns", np.random.normal(0.0005, 0.01, 60))
 
-            # TODO: Implement actual logic based on specification
-            # This is a minimal working implementation
+            # Calculate correlation
+            correlation = float(np.corrcoef(spy_returns, tlt_returns)[0, 1])
+
+            # Signal generation
+            if correlation > -0.4:
+                # Breakdown = stress = buy TLT (safe haven)
+                signal = 0.6
+                interpretation = "⚠️ Correlation breakdown → Flight to safety (BUY TLT)"
+            else:
+                signal = 0.0
+                interpretation = "✅ Normal inverse correlation"
+
             result_data = {
-                "plugin_id": "alpha_cross_asset_corr",
-                "status": "executed",
-                "confidence": 0.75,
+                "correlation": correlation,
+                "signal_strength": signal,
+                "interpretation": interpretation,
+                "normal_range": -0.7,
             }
 
             if context.bus:
                 await context.bus.publish(
-                    "alpha_cross_asset_corr_update",
+                    "cross_asset_corr_update",
                     result_data,
                     source="alpha_cross_asset_corr",
                 )
@@ -58,5 +73,5 @@ class AlphaCrossAssetCorr(Plugin):
             return PluginResult(success=True, data=result_data)
 
         except Exception as e:
-            logger.error(f"Error in {self.metadata.plugin_id}: {e}", exc_info=True)
+            logger.error(f"Error in cross-asset correlation: {e}", exc_info=True)
             return PluginResult(success=False, error=str(e))

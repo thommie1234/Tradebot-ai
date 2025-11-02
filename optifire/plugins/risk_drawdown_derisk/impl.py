@@ -1,56 +1,73 @@
 """
-risk_drawdown_derisk implementation.
+risk_drawdown_derisk - Drawdown-based de-risking.
 FULL IMPLEMENTATION
 """
 from typing import Dict, Any
 from optifire.plugins import Plugin, PluginMetadata, PluginContext, PluginResult
 from optifire.core.logger import logger
 
+
 class RiskDrawdownDerisk(Plugin):
     """
-    Drawdown-based de-risking
+    Drawdown de-risking.
 
-    Inputs: ['portfolio_value']
-    Outputs: ['risk_multiplier']
+    < 5% DD: 1.0x (normal)
+    5-8% DD: 0.5x (half size)
+    >= 8% DD: 0.0x (STOP TRADING)
     """
 
     def describe(self) -> PluginMetadata:
         return PluginMetadata(
             plugin_id="risk_drawdown_derisk",
-            name="DRAWDOWN-BASED de-risking",
+            name="Drawdown De-risking",
             category="risk",
             version="1.0.0",
             author="OptiFIRE",
-            description="Drawdown-based de-risking",
-            inputs=['portfolio_value'],
-            outputs=['risk_multiplier'],
-            est_cpu_ms=200,
-            est_mem_mb=20,
+            description="Auto-reduce size on drawdown",
+            inputs=['equity', 'high_water_mark'],
+            outputs=['drawdown_pct', 'multiplier'],
+            est_cpu_ms=100,
+            est_mem_mb=10,
         )
 
     def plan(self) -> Dict[str, Any]:
         return {
-            "schedule": "@open",
-            "triggers": ["market_open"],
-            "dependencies": ["market_data"],
+            "schedule": "@continuous",
+            "triggers": ["every_5min"],
+            "dependencies": [],
         }
 
     async def run(self, context: PluginContext) -> PluginResult:
-        """Execute risk_drawdown_derisk logic."""
+        """Calculate drawdown multiplier."""
         try:
-            logger.info(f"Running {self.metadata.plugin_id}...")
+            equity = context.params.get("equity", 10000)
+            hwm = context.params.get("high_water_mark", 10000)
 
-            # TODO: Implement actual logic based on specification
-            # This is a minimal working implementation
+            # Calculate drawdown
+            drawdown = (hwm - equity) / hwm if hwm > 0 else 0.0
+
+            # Determine multiplier
+            if drawdown >= 0.08:
+                multiplier = 0.0
+                interpretation = "⛔ STOP TRADING (DD >= 8%)"
+            elif drawdown >= 0.05:
+                multiplier = 0.5
+                interpretation = "⚠️ Half size (DD >= 5%)"
+            else:
+                multiplier = 1.0
+                interpretation = "✅ Normal size"
+
             result_data = {
-                "plugin_id": "risk_drawdown_derisk",
-                "status": "executed",
-                "confidence": 0.75,
+                "equity": equity,
+                "high_water_mark": hwm,
+                "drawdown_pct": drawdown * 100,
+                "multiplier": multiplier,
+                "interpretation": interpretation,
             }
 
             if context.bus:
                 await context.bus.publish(
-                    "risk_drawdown_derisk_update",
+                    "drawdown_derisk_update",
                     result_data,
                     source="risk_drawdown_derisk",
                 )
@@ -58,5 +75,5 @@ class RiskDrawdownDerisk(Plugin):
             return PluginResult(success=True, data=result_data)
 
         except Exception as e:
-            logger.error(f"Error in {self.metadata.plugin_id}: {e}", exc_info=True)
+            logger.error(f"Error in drawdown de-risk: {e}", exc_info=True)
             return PluginResult(success=False, error=str(e))
