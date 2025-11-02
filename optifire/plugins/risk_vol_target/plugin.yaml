@@ -1,0 +1,20 @@
+# risk_vol_target Plugin Configuration
+name: risk_vol_target
+category: risk
+version: "1.0.0"
+author: "OptiFIRE"
+description: "Volatility targeting"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

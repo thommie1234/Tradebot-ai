@@ -1,0 +1,7 @@
+
+plugins:
+  exec_batch:
+    enabled: true
+    budget:
+      cpu_ms: 500
+      mem_mb: 30

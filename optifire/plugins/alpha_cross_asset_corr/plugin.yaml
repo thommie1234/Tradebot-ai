@@ -1,0 +1,20 @@
+# alpha_cross_asset_corr Plugin Configuration
+name: alpha_cross_asset_corr
+category: alpha
+version: "1.0.0"
+author: "OptiFIRE"
+description: "Cross-asset correlation signals"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

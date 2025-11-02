@@ -1,0 +1,20 @@
+# diag_cpcv_overfit Plugin Configuration
+name: diag_cpcv_overfit
+category: diag
+version: "1.0.0"
+author: "OptiFIRE"
+description: "Combinatorial purged CV overfitting check"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

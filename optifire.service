@@ -1,0 +1,16 @@
+[Unit]
+Description=OptiFIRE Trading Platform with Auto-Restart
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/optifire
+ExecStart=/bin/bash /root/optifire/monitor.sh
+Restart=always
+RestartSec=10
+StandardOutput=append:/tmp/optifire_monitor.log
+StandardError=append:/tmp/optifire_monitor.log
+
+[Install]
+WantedBy=multi-user.target

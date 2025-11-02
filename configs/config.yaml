@@ -1,0 +1,50 @@
+# OptiFIRE System Configuration
+
+system:
+  max_workers: 3
+  max_ram_mb: 900
+  max_cpu_percent: 90
+  data_dir: "data"
+  log_level: "INFO"
+
+risk:
+  max_exposure_total: 0.30  # 30% of portfolio
+  max_exposure_symbol: 0.10  # 10% per symbol
+  max_drawdown: 0.08  # 8% max drawdown
+  max_losing_streak: 3  # Days
+  kelly_min: 0.25
+  kelly_max: 1.5
+  beta_hedge_threshold: 0.6
+  var_confidence: 0.95
+  max_var_pct: 0.05
+  cooldown_hours: 24
+
+execution:
+  batch_window_seconds: 1.0
+  rth_only: true  # Regular trading hours only
+  max_slippage_bps: 10
+  broker: "alpaca"
+  paper_trading: true
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  jwt_expiry_hours: 24
+  enable_cors: false
+
+openai:
+  max_concurrent: 1
+  timeout_seconds: 15
+  cache_dir: "data/openai_cache"
+  model: "gpt-3.5-turbo"
+
+data:
+  sqlite_db: "data/optifire.db"
+  parquet_dir: "data/parquet"
+  duckdb_path: "data/analytics.duckdb"
+
+ml:
+  lgbm_model_path: "data/models/lgbm_news.txt"
+  onnx_model_path: "data/models/model.onnx"
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  lazy_load: true  # Lazy load ML models to save memory

@@ -1,0 +1,20 @@
+# risk_time_decay_size Plugin Configuration
+name: risk_time_decay_size
+category: risk
+version: "1.0.0"
+author: "OptiFIRE"
+description: "Time-decay position sizing"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

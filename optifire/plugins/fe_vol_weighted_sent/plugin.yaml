@@ -1,0 +1,20 @@
+# fe_vol_weighted_sent Plugin Configuration
+name: fe_vol_weighted_sent
+category: fe
+version: "1.0.0"
+author: "OptiFIRE"
+description: "Volume-weighted sentiment"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

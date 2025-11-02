@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OptiFIRE - Trading Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-item { cursor: pointer; transition: all 0.2s; }
+        .nav-item.active { background-color: rgb(30, 41, 59); border-bottom: 2px solid rgb(59, 130, 246); }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <!-- Header with Navigation -->
+    <nav class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-blue-400">OptiFIRE</h1>
+                    <span class="ml-2 text-sm text-gray-400 hidden md:inline">Optimized Feature Integration & Risk Engine</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="connection-status" class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-gray-500"></div>
+                        <span class="ml-2 text-sm text-gray-400">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex space-x-1 pb-0 -mb-px">
+                <div class="nav-item active px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 rounded-t" onclick="switchTab('dashboard')">
+                    📊 Dashboard
+                </div>
+                <div class="nav-item px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-t" onclick="switchTab('portfolio')">
+                    💼 Portfolio
+                </div>
+                <div class="nav-item px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-t" onclick="switchTab('orders')">
+                    📝 Orders
+                </div>
+                <div class="nav-item px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-t" onclick="switchTab('risk')">
+                    ⚠️ Risk
+                </div>
+                <div class="nav-item px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-t" onclick="switchTab('config')">
+                    ⚙️ Config
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content active">
+            <h2 class="text-2xl font-bold mb-6">Dashboard Overview</h2>
+
+            <!-- Portfolio Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="text-gray-400 text-sm mb-2">Equity</div>
+                    <div id="equity" class="text-3xl font-bold text-white">$0.00</div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="text-gray-400 text-sm mb-2">Unrealized P&L</div>
+                    <div id="unrealized-pnl" class="text-3xl font-bold">$0.00</div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="text-gray-400 text-sm mb-2">Exposure</div>
+                    <div id="exposure" class="text-3xl font-bold text-white">0%</div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="text-gray-400 text-sm mb-2">Positions</div>
+                    <div id="num-positions" class="text-3xl font-bold text-white">0</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions & Events -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">Quick Trade</h3>
+                    <form id="quick-order-form" class="space-y-3">
+                        <div class="grid grid-cols-3 gap-3">
+                            <input type="text" id="quick-symbol" placeholder="Symbol" required
+                                   class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            <input type="number" id="quick-qty" placeholder="Qty" step="0.01" required
+                                   class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            <select id="quick-side" class="px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md">
+                            Submit Order
+                        </button>
+                    </form>
+                    <div id="quick-order-result" class="mt-3"></div>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">Live Events</h3>
+                    <div id="event-log-mini" class="space-y-2 max-h-48 overflow-y-auto font-mono text-sm"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PORTFOLIO TAB -->
+        <div id="tab-portfolio" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6">Portfolio Management</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Account Summary -->
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">Account Summary</h3>
+                    <div id="account-summary" class="space-y-2">
+                        <div class="flex justify-between"><span class="text-gray-400">Equity:</span><span class="font-bold" id="port-equity">$0.00</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Cash:</span><span id="port-cash">$0.00</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Buying Power:</span><span id="port-bp">$0.00</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Positions Value:</span><span id="port-pos-value">$0.00</span></div>
+                        <hr class="border-gray-700 my-3">
+                        <div class="flex justify-between"><span class="text-gray-400">Unrealized P&L:</span><span class="font-bold" id="port-upnl">$0.00</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Realized P&L:</span><span id="port-rpnl">$0.00</span></div>
+                    </div>
+                </div>
+
+                <!-- Performance -->
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">Performance</h3>
+                    <div id="performance-summary" class="space-y-2">
+                        <div class="flex justify-between"><span class="text-gray-400">Total Return:</span><span id="perf-return">0.0%</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Sharpe Ratio:</span><span id="perf-sharpe">0.00</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Max Drawdown:</span><span id="perf-dd">0.0%</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Win Rate:</span><span id="perf-winrate">50%</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Total Trades:</span><span id="perf-trades">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Positions Table -->
+            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 class="text-xl font-bold mb-4 text-white">Current Positions</h3>
+                <div id="positions-table"><div class="text-gray-400">Loading...</div></div>
+            </div>
+        </div>
+
+        <!-- ORDERS TAB -->
+        <div id="tab-orders" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6">Order Management</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Place Order Form -->
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">Place New Order</h3>
+                    <form id="order-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Symbol</label>
+                            <input type="text" id="symbol" required placeholder="e.g., AAPL"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Quantity</label>
+                                <input type="number" id="qty" step="0.01" placeholder="1"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Side</label>
+                                <select id="side" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                                    <option value="buy">Buy</option>
+                                    <option value="sell">Sell</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Order Type</label>
+                            <select id="order-type" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                                <option value="market">Market</option>
+                                <option value="limit">Limit</option>
+                                <option value="stop">Stop</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md">
+                            Submit Order
+                        </button>
+                    </form>
+                    <div id="order-result" class="mt-4"></div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">Recent Orders</h3>
+                    <div id="recent-orders" class="max-h-96 overflow-y-auto">
+                        <div class="text-gray-400">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RISK TAB -->
+        <div id="tab-risk" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6">Risk Management</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Risk Metrics -->
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold mb-4 text-white">Market Risk</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-gray-400 text-sm">VaR (95%)</div>
+                            <div class="text-2xl font-bold text-red-400" id="risk-var">$0</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm">CVaR (95%)</div>
+                            <div class="text-2xl font-bold text-red-400" id="risk-cvar">$0</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm">Beta</div>
+                            <div class="text-2xl font-bold" id="risk-beta">1.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold mb-4 text-white">Exposure</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-gray-400 text-sm">Total Exposure</div>
+                            <div class="text-2xl font-bold" id="risk-exposure">0%</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm">Number of Positions</div>
+                            <div class="text-2xl font-bold" id="risk-num-pos">0</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm">Drawdown</div>
+                            <div class="text-2xl font-bold text-yellow-400" id="risk-dd">0.0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-lg font-bold mb-4 text-white">Performance</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="text-gray-400 text-sm">Sharpe Ratio</div>
+                            <div class="text-2xl font-bold" id="risk-sharpe">0.00</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400 text-sm">Total Return</div>
+                            <div class="text-2xl font-bold text-green-400" id="risk-return">0.0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIG TAB -->
+        <div id="tab-config" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6">System Configuration</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Feature Flags -->
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">Feature Flags</h3>
+                    <div id="feature-flags" class="space-y-2">
+                        <div class="text-gray-400">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- System Info -->
+                <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold mb-4 text-white">System Info</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between"><span class="text-gray-400">Status:</span><span class="text-green-400">● Running</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Version:</span><span>1.0.0</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">API:</span><span>http://185.181.8.39:8000</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Database:</span><span>SQLite (WAL)</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">Broker:</span><span>Alpaca Paper</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Log -->
+            <div class="mt-6 bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 class="text-xl font-bold mb-4 text-white">Event Log</h3>
+                <div id="event-log" class="space-y-2 max-h-64 overflow-y-auto font-mono text-sm"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Remove active from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                item.classList.remove('text-white');
+                item.classList.add('text-gray-300');
+            });
+
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.add('active');
+            // Highlight nav item
+            event.target.classList.add('active', 'text-white');
+            event.target.classList.remove('text-gray-300');
+
+            // Refresh data for the tab
+            if (tabName === 'portfolio') loadPortfolioData();
+            if (tabName === 'orders') loadOrdersData();
+            if (tabName === 'risk') loadRiskData();
+            if (tabName === 'config') loadConfigData();
+        }
+
+        // SSE Connection
+        const eventSource = new EventSource('/events/stream');
+        const eventLog = document.getElementById('event-log');
+        const eventLogMini = document.getElementById('event-log-mini');
+        const connectionStatus = document.getElementById('connection-status');
+
+        eventSource.onopen = function() {
+            connectionStatus.innerHTML = '<div class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div><span class="ml-2 text-sm text-green-400">Connected</span>';
+            fetchMetrics();
+        };
+
+        eventSource.onerror = function() {
+            connectionStatus.innerHTML = '<div class="w-3 h-3 rounded-full bg-red-500"></div><span class="ml-2 text-sm text-red-400">Disconnected</span>';
+        };
+
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'portfolio_update') updatePortfolio(data);
+            addEventToLog(data);
+        };
+
+        async function fetchMetrics() {
+            try {
+                const portfolio = await fetch('/metrics/portfolio').then(r => r.json());
+                updatePortfolio(portfolio);
+
+                const positions = await fetch('/metrics/positions').then(r => r.json());
+                renderPositions(positions.positions);
+            } catch (e) {
+                console.error('Failed to fetch metrics:', e);
+            }
+        }
+
+        function updatePortfolio(data) {
+            if (data.equity) {
+                document.getElementById('equity').textContent = '$' + data.equity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                if (document.getElementById('port-equity')) {
+                    document.getElementById('port-equity').textContent = '$' + data.equity.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+            }
+            if (data.cash && document.getElementById('port-cash')) {
+                document.getElementById('port-cash').textContent = '$' + data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+            if (data.buying_power && document.getElementById('port-bp')) {
+                document.getElementById('port-bp').textContent = '$' + data.buying_power.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+            if (data.positions_value !== undefined && document.getElementById('port-pos-value')) {
+                document.getElementById('port-pos-value').textContent = '$' + data.positions_value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+            if (data.unrealized_pnl !== undefined) {
+                const pnl = data.unrealized_pnl;
+                const cls = pnl >= 0 ? 'text-green-400' : 'text-red-400';
+                const sign = pnl >= 0 ? '+' : '';
+                const html = '<span class="' + cls + '">' + sign + '$' + pnl.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
+                document.getElementById('unrealized-pnl').innerHTML = html;
+                if (document.getElementById('port-upnl')) {
+                    document.getElementById('port-upnl').innerHTML = html;
+                }
+            }
+            if (data.realized_pnl !== undefined && document.getElementById('port-rpnl')) {
+                document.getElementById('port-rpnl').textContent = '$' + data.realized_pnl.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+            if (data.exposure_pct !== undefined) {
+                document.getElementById('exposure').textContent = (data.exposure_pct * 100).toFixed(1) + '%';
+            }
+        }
+
+        function renderPositions(positions) {
+            const table = document.getElementById('positions-table');
+            if (!positions || positions.length === 0) {
+                table.innerHTML = '<div class="text-gray-400">No open positions</div>';
+                document.getElementById('num-positions').textContent = '0';
+                return;
+            }
+
+            document.getElementById('num-positions').textContent = positions.length;
+            let html = '<table class="w-full text-sm"><thead><tr class="text-gray-400 border-b border-gray-700"><th class="text-left pb-2">Symbol</th><th class="text-right pb-2">Qty</th><th class="text-right pb-2">Entry</th><th class="text-right pb-2">Current</th><th class="text-right pb-2">P&L</th></tr></thead><tbody class="divide-y divide-gray-700">';
+            positions.forEach(pos => {
+                const cls = pos.unrealized_pnl >= 0 ? 'text-green-400' : 'text-red-400';
+                html += '<tr><td class="py-2 font-semibold">' + pos.symbol + '</td><td class="text-right">' + pos.qty + '</td><td class="text-right">$' + pos.avg_entry_price.toFixed(2) + '</td><td class="text-right">$' + pos.current_price.toFixed(2) + '</td><td class="text-right ' + cls + '">$' + pos.unrealized_pnl.toFixed(2) + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            table.innerHTML = html;
+        }
+
+        function addEventToLog(data) {
+            const div = document.createElement('div');
+            div.className = 'text-gray-400 border-l-2 border-blue-500 pl-3 py-1';
+            const time = new Date(data.timestamp).toLocaleTimeString();
+            div.innerHTML = '<span class="text-gray-500">' + time + '</span> <span class="ml-2 text-blue-400 font-semibold">' + data.type + '</span>';
+
+            if (eventLog) {
+                eventLog.insertBefore(div.cloneNode(true), eventLog.firstChild);
+                while (eventLog.children.length > 50) eventLog.removeChild(eventLog.lastChild);
+            }
+
+            if (eventLogMini) {
+                eventLogMini.insertBefore(div.cloneNode(true), eventLogMini.firstChild);
+                while (eventLogMini.children.length > 10) eventLogMini.removeChild(eventLogMini.lastChild);
+            }
+        }
+
+        // Order forms
+        async function submitOrder(formData) {
+            try {
+                const response = await fetch('/orders/submit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    return {success: true, data: data};
+                } else {
+                    return {success: false, error: data.detail};
+                }
+            } catch (e) {
+                return {success: false, error: e.message};
+            }
+        }
+
+        document.getElementById('order-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = await submitOrder({
+                symbol: document.getElementById('symbol').value,
+                qty: parseFloat(document.getElementById('qty').value),
+                side: document.getElementById('side').value,
+                order_type: document.getElementById('order-type').value
+            });
+
+            const resultDiv = document.getElementById('order-result');
+            if (result.success) {
+                resultDiv.innerHTML = '<div class="text-green-400 p-3 bg-green-900/20 rounded">✓ Order submitted: ' + result.data.order_id + '</div>';
+                e.target.reset();
+                setTimeout(() => loadOrdersData(), 1000);
+            } else {
+                resultDiv.innerHTML = '<div class="text-red-400 p-3 bg-red-900/20 rounded">✗ Error: ' + result.error + '</div>';
+            }
+        });
+
+        document.getElementById('quick-order-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const result = await submitOrder({
+                symbol: document.getElementById('quick-symbol').value,
+                qty: parseFloat(document.getElementById('quick-qty').value),
+                side: document.getElementById('quick-side').value,
+                order_type: 'market'
+            });
+
+            const resultDiv = document.getElementById('quick-order-result');
+            if (result.success) {
+                resultDiv.innerHTML = '<div class="text-green-400 text-sm">✓ Order submitted</div>';
+                e.target.reset();
+            } else {
+                resultDiv.innerHTML = '<div class="text-red-400 text-sm">✗ ' + result.error + '</div>';
+            }
+            setTimeout(() => resultDiv.innerHTML = '', 3000);
+        });
+
+        // Load data functions
+        async function loadPortfolioData() {
+            try {
+                const portfolio = await fetch('/metrics/portfolio').then(r => r.json());
+                updatePortfolio(portfolio);
+
+                const positions = await fetch('/metrics/positions').then(r => r.json());
+                renderPositions(positions.positions);
+
+                const perf = await fetch('/metrics/performance').then(r => r.json());
+                if (document.getElementById('perf-return')) {
+                    document.getElementById('perf-return').textContent = perf.total_return_pct.toFixed(1) + '%';
+                    document.getElementById('perf-sharpe').textContent = perf.sharpe_ratio.toFixed(2);
+                    document.getElementById('perf-dd').textContent = perf.max_drawdown.toFixed(1) + '%';
+                    document.getElementById('perf-winrate').textContent = (perf.win_rate * 100).toFixed(0) + '%';
+                    document.getElementById('perf-trades').textContent = perf.total_trades;
+                }
+            } catch (e) {
+                console.error('Failed to load portfolio data:', e);
+            }
+        }
+
+        async function loadOrdersData() {
+            try {
+                const data = await fetch('/orders/?limit=20').then(r => r.json());
+                const div = document.getElementById('recent-orders');
+
+                if (data.orders.length === 0) {
+                    div.innerHTML = '<div class="text-gray-400">No orders yet</div>';
+                    return;
+                }
+
+                let html = '<div class="space-y-2">';
+                data.orders.forEach(order => {
+                    const statusColor = {
+                        'filled': 'text-green-400',
+                        'accepted': 'text-yellow-400',
+                        'pending': 'text-blue-400',
+                        'canceled': 'text-red-400'
+                    }[order.status] || 'text-gray-400';
+
+                    html += `<div class="border-b border-gray-700 pb-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-semibold">${order.symbol}</span>
+                                <span class="text-gray-400 ml-2">${order.side}</span>
+                                <span class="text-gray-400 ml-2">${order.qty}</span>
+                            </div>
+                            <span class="${statusColor} text-sm">${order.status}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">${order.order_id}</div>
+                    </div>`;
+                });
+                html += '</div>';
+                div.innerHTML = html;
+            } catch (e) {
+                console.error('Failed to load orders:', e);
+            }
+        }
+
+        async function loadRiskData() {
+            try {
+                const risk = await fetch('/metrics/risk').then(r => r.json());
+                document.getElementById('risk-var').textContent = '$' + risk.var_95.toLocaleString(undefined, {maximumFractionDigits: 0});
+                document.getElementById('risk-cvar').textContent = '$' + risk.cvar_95.toLocaleString(undefined, {maximumFractionDigits: 0});
+                document.getElementById('risk-beta').textContent = risk.beta.toFixed(2);
+                document.getElementById('risk-exposure').textContent = (risk.exposure_pct * 100).toFixed(1) + '%';
+                document.getElementById('risk-num-pos').textContent = risk.num_positions;
+                document.getElementById('risk-dd').textContent = (risk.drawdown * 100).toFixed(1) + '%';
+                document.getElementById('risk-sharpe').textContent = risk.sharpe.toFixed(2);
+            } catch (e) {
+                console.error('Failed to load risk data:', e);
+            }
+        }
+
+        async function loadConfigData() {
+            try {
+                const flags = await fetch('/config/flags').then(r => r.json());
+                const div = document.getElementById('feature-flags');
+
+                let html = '<div class="space-y-2">';
+                Object.entries(flags.plugins || {}).forEach(([id, config]) => {
+                    const enabled = config.enabled;
+                    html += `<div class="flex justify-between items-center p-2 bg-gray-700 rounded">
+                        <span class="text-sm">${id}</span>
+                        <button onclick="toggleFlag('${id}', ${!enabled})" class="px-3 py-1 rounded text-sm ${enabled ? 'bg-green-600' : 'bg-gray-600'}">
+                            ${enabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                    </div>`;
+                });
+                html += '</div>';
+                div.innerHTML = html;
+            } catch (e) {
+                console.error('Failed to load config:', e);
+            }
+        }
+
+        async function toggleFlag(pluginId, enabled) {
+            try {
+                await fetch(`/config/flags/${pluginId}/toggle?enabled=${enabled}`, {method: 'POST'});
+                loadConfigData();
+            } catch (e) {
+                console.error('Failed to toggle flag:', e);
+            }
+        }
+
+        // Auto refresh
+        setInterval(fetchMetrics, 10000);
+        setInterval(() => {
+            const activeTab = document.querySelector('.tab-content.active').id;
+            if (activeTab === 'tab-orders') loadOrdersData();
+        }, 5000);
+    </script>
+</body>
+</html>

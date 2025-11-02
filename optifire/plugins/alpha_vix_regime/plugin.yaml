@@ -1,0 +1,20 @@
+# alpha_vix_regime Plugin Configuration
+name: alpha_vix_regime
+category: alpha
+version: "1.0.0"
+author: "OptiFIRE"
+description: "VIX regime detection for volatility trading"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

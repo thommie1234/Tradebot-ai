@@ -1,0 +1,20 @@
+# ml_quantile_calibrator Plugin Configuration
+name: ml_quantile_calibrator
+category: ml
+version: "1.0.0"
+author: "OptiFIRE"
+description: "Quantile calibration"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

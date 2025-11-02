@@ -1,0 +1,20 @@
+
+system:
+  max_workers: 3
+  max_ram_mb: 900
+  max_cpu_percent: 90
+
+risk:
+  max_exposure_total: 0.30
+  max_exposure_symbol: 0.10
+  max_drawdown: 0.08
+
+execution:
+  batch_window_seconds: 1
+  rth_only: true
+  max_slippage_bps: 10
+
+api:
+  host: 0.0.0.0
+  port: 8000
+  jwt_expiry_hours: 24

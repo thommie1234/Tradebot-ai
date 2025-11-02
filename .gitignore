@@ -1,0 +1,52 @@
+# Secrets
+secrets.env
+configs/secrets.env
+*.key
+*.pem
+
+# Data
+data/
+logs/
+*.db
+*.db-shm
+*.db-wal
+*.parquet
+*.duckdb
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Models
+*.pkl
+*.joblib
+*.onnx
+*.h5
+
+# Temp
+*.tmp
+*.bak

@@ -1,0 +1,20 @@
+# alpha_t_stat_threshold Plugin Configuration
+name: alpha_t_stat_threshold
+category: alpha
+version: "1.0.0"
+author: "OptiFIRE"
+description: "T-stat threshold filter"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

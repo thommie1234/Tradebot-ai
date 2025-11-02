@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "optifire"
+version = "1.0.0"
+description = "Optimized Feature Integration & Risk Engine - Plugin-based trading system"
+authors = ["OptiFIRE Team"]
+readme = "README.md"
+packages = [{include = "optifire"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["optifire/tests", "optifire/plugins/*/tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

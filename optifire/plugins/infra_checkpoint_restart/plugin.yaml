@@ -1,0 +1,20 @@
+# infra_checkpoint_restart Plugin Configuration
+name: infra_checkpoint_restart
+category: infra
+version: "1.0.0"
+author: "OptiFIRE"
+description: "Checkpoint and restart"
+
+# Resource budgets
+budget:
+  cpu_ms: 1000
+  mem_mb: 50
+
+# Execution schedule (cron, @idle, @open, @close, interval_Xs)
+schedule: "@idle"
+
+# Dependencies
+dependencies: []
+
+# Enabled by default
+enabled: true

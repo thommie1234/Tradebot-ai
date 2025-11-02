@@ -1,0 +1,397 @@
+# OptiFIRE Feature Flags
+# All plugins are OFF by default
+# Enable only what you need for your VPS constraints
+
+# Core defaults (recommended to keep ON)
+core:
+  risk_engine:
+    enabled: true
+  executor:
+    enabled: true
+  data_collectors:
+    enabled: true
+
+# Alpha Signals - ALL OFF by default
+plugins:
+  alpha_vix_regime:
+    enabled: false
+    schedule: "@open"
+    budget: {cpu_ms: 500, mem_mb: 30}
+
+  alpha_cross_asset_corr:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 1000, mem_mb: 50}
+
+  alpha_google_trends:
+    enabled: false
+    schedule: "0 10 * * *"  # Daily at 10 AM
+    budget: {cpu_ms: 2000, mem_mb: 40}
+
+  alpha_vrp:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 800, mem_mb: 35}
+
+  alpha_analyst_revisions:
+    enabled: false
+    schedule: "0 18 * * *"  # Daily at 6 PM
+    budget: {cpu_ms: 1500, mem_mb: 45}
+
+  alpha_whisper_spread:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 600, mem_mb: 25}
+
+  alpha_coint_pairs:
+    enabled: false
+    schedule: "*/30 * * * *"  # Every 30 min
+    budget: {cpu_ms: 2000, mem_mb: 60}
+
+  alpha_risk_reversal:
+    enabled: false
+    schedule: "@open"
+    budget: {cpu_ms: 1000, mem_mb: 40}
+
+  alpha_etf_flow_div:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 1200, mem_mb: 50}
+
+  alpha_micro_imbalance:
+    enabled: false
+    schedule: "interval_5m"
+    budget: {cpu_ms: 800, mem_mb: 35}
+
+  alpha_t_stat_threshold:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 500, mem_mb: 25}
+
+  alpha_position_agnostic:
+    enabled: false
+    schedule: "@open"
+    budget: {cpu_ms: 700, mem_mb: 30}
+
+  alpha_vpin:
+    enabled: false
+    schedule: "interval_1m"
+    budget: {cpu_ms: 600, mem_mb: 30}
+
+  # Feature Engineering
+  fe_kalman:
+    enabled: false
+    schedule: "interval_5m"
+    budget: {cpu_ms: 400, mem_mb: 25}
+
+  fe_garch:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 1500, mem_mb: 40}
+
+  fe_price_news_div:
+    enabled: false
+    schedule: "interval_15m"
+    budget: {cpu_ms: 800, mem_mb: 35}
+
+  fe_fracdiff:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 1000, mem_mb: 40}
+
+  fe_mini_pca:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 1200, mem_mb: 50}
+
+  fe_wavelet:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 1500, mem_mb: 45}
+
+  fe_entropy:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 600, mem_mb: 30}
+
+  fe_duckdb_store:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 2000, mem_mb: 80}
+
+  fe_dollar_bars:
+    enabled: false
+    schedule: "interval_1m"
+    budget: {cpu_ms: 800, mem_mb: 40}
+
+  fe_vol_weighted_sent:
+    enabled: false
+    schedule: "interval_5m"
+    budget: {cpu_ms: 700, mem_mb: 35}
+
+  # Risk Management
+  risk_var_budget:
+    enabled: false
+    schedule: "@open"
+    budget: {cpu_ms: 500, mem_mb: 30}
+
+  risk_drawdown_derisk:
+    enabled: true  # Keep ON for safety
+    schedule: "interval_5m"
+    budget: {cpu_ms: 300, mem_mb: 20}
+
+  risk_frac_kelly_atten:
+    enabled: false
+    schedule: "@open"
+    budget: {cpu_ms: 400, mem_mb: 25}
+
+  risk_vol_target:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 500, mem_mb: 30}
+
+  risk_time_decay_size:
+    enabled: false
+    schedule: "interval_1h"
+    budget: {cpu_ms: 300, mem_mb: 20}
+
+  risk_tracking_error:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 600, mem_mb: 35}
+
+  risk_liquidity_hotspot:
+    enabled: false
+    schedule: "interval_5m"
+    budget: {cpu_ms: 700, mem_mb: 30}
+
+  risk_cvar_size:
+    enabled: false
+    schedule: "@open"
+    budget: {cpu_ms: 500, mem_mb: 30}
+
+  risk_entropy_weights:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 800, mem_mb: 40}
+
+  risk_auto_hedge_ratio:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 600, mem_mb: 30}
+
+  # AI/ML
+  ai_bandit_alloc:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 1000, mem_mb: 50}
+
+  ai_meta_labeling:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 1500, mem_mb: 60}
+
+  ai_online_sgd:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 2000, mem_mb: 70}
+
+  ai_dtw_matcher:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 1800, mem_mb: 55}
+
+  ai_news_vectors:
+    enabled: false
+    schedule: "interval_30m"
+    budget: {cpu_ms: 2500, mem_mb: 100}
+
+  ai_shap_drift:
+    enabled: false
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    budget: {cpu_ms: 3000, mem_mb: 80}
+
+  ai_topic_clustering:
+    enabled: false
+    schedule: "0 3 * * *"  # Daily at 3 AM
+    budget: {cpu_ms: 2000, mem_mb: 70}
+
+  # ML Supervised Learning
+  sl_optuna_pruner:
+    enabled: false
+    schedule: "0 1 * * *"  # Daily at 1 AM
+    budget: {cpu_ms: 5000, mem_mb: 150}
+
+  sl_fading_memory:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 800, mem_mb: 40}
+
+  sl_bayes_update:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 1000, mem_mb: 50}
+
+  sl_perf_trigger:
+    enabled: false
+    schedule: "interval_1h"
+    budget: {cpu_ms: 500, mem_mb: 30}
+
+  ml_entropy_monitor:
+    enabled: false
+    schedule: "interval_30m"
+    budget: {cpu_ms: 600, mem_mb: 35}
+
+  ml_shadow_ab:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 1200, mem_mb: 60}
+
+  ml_quantile_calibrator:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 1000, mem_mb: 50}
+
+  ml_lgbm_quantize:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 1500, mem_mb: 60}
+
+  ml_onnx_runtime:
+    enabled: false
+    schedule: "@idle"
+    budget: {cpu_ms: 800, mem_mb: 40}
+
+  # Diagnostics
+  diag_oos_decay_plot:
+    enabled: false
+    schedule: "0 0 * * 0"  # Weekly
+    budget: {cpu_ms: 2000, mem_mb: 60}
+
+  diag_data_drift:
+    enabled: false
+    schedule: "0 6 * * *"  # Daily at 6 AM
+    budget: {cpu_ms: 1500, mem_mb: 55}
+
+  diag_slippage_report:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 800, mem_mb: 40}
+
+  diag_cpcv_overfit:
+    enabled: false
+    schedule: "0 0 * * 0"  # Weekly
+    budget: {cpu_ms: 3000, mem_mb: 80}
+
+  diag_param_sensitivity:
+    enabled: false
+    schedule: "0 0 * * 0"  # Weekly
+    budget: {cpu_ms: 2500, mem_mb: 70}
+
+  diag_sharpe_ci:
+    enabled: false
+    schedule: "@close"
+    budget: {cpu_ms: 600, mem_mb: 30}
+
+  # Infrastructure
+  infra_psutil_health:
+    enabled: true  # Keep ON
+    schedule: "interval_1m"
+    budget: {cpu_ms: 100, mem_mb: 10}
+
+  infra_checkpoint_restart:
+    enabled: false
+    schedule: "0 */6 * * *"  # Every 6 hours
+    budget: {cpu_ms: 500, mem_mb: 30}
+
+  infra_apscheduler:
+    enabled: true  # Core
+    schedule: null
+    budget: {cpu_ms: 200, mem_mb: 20}
+
+  infra_api_cache:
+    enabled: true  # Recommended
+    schedule: null
+    budget: {cpu_ms: 100, mem_mb: 50}
+
+  infra_pandera_validation:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 200, mem_mb: 20}
+
+  infra_broker_latency:
+    enabled: false
+    schedule: "interval_5m"
+    budget: {cpu_ms: 300, mem_mb: 20}
+
+  infra_sqlite_txlog:
+    enabled: true  # Core
+    schedule: null
+    budget: {cpu_ms: 100, mem_mb: 15}
+
+  infra_heartbeat:
+    enabled: true  # Recommended
+    schedule: "interval_1m"
+    budget: {cpu_ms: 50, mem_mb: 10}
+
+  infra_config_hot_reload:
+    enabled: true  # Core
+    schedule: null
+    budget: {cpu_ms: 100, mem_mb: 15}
+
+  infra_dockerize:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 0, mem_mb: 0}
+
+  # Execution
+  exec_batch_orders:
+    enabled: true  # Core
+    schedule: null
+    budget: {cpu_ms: 500, mem_mb: 30}
+
+  exec_moc:
+    enabled: false
+    schedule: "55 15 * * *"  # 3:55 PM for MOC
+    budget: {cpu_ms: 300, mem_mb: 20}
+
+  extra_bidask_filter:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 200, mem_mb: 15}
+
+  # UX
+  ux_ws_pnl_sse:
+    enabled: true  # Core UI
+    schedule: null
+    budget: {cpu_ms: 100, mem_mb: 20}
+
+  ux_strategy_pie:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 200, mem_mb: 25}
+
+  ux_var_es_plot:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 300, mem_mb: 30}
+
+  ux_signal_contrib:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 400, mem_mb: 35}
+
+  ux_discord_cmds:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 200, mem_mb: 20}
+
+  ux_pnl_drawdown_plot:
+    enabled: false
+    schedule: null
+    budget: {cpu_ms: 300, mem_mb: 30}
+
+  ux_log_level_ctrl:
+    enabled: true  # Recommended
+    schedule: null
+    budget: {cpu_ms: 50, mem_mb: 10}
