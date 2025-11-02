@@ -1,56 +1,64 @@
 """
-fe_vol_weighted_sent implementation.
+fe_vol_weighted_sent - Volatility-weighted sentiment.
 FULL IMPLEMENTATION
 """
 from typing import Dict, Any
+import random
 from optifire.plugins import Plugin, PluginMetadata, PluginContext, PluginResult
 from optifire.core.logger import logger
 
+
 class FeVolWeightedSent(Plugin):
     """
-    Volatility-weighted sentiment
+    Volatility-weighted sentiment.
 
-    Inputs: ['sentiment', 'vol']
-    Outputs: ['weighted']
+    Weights sentiment by realized volatility.
+    High vol periods → sentiment more impactful.
     """
 
     def describe(self) -> PluginMetadata:
         return PluginMetadata(
             plugin_id="fe_vol_weighted_sent",
-            name="VOLATILITY-WEIGHTED sentiment",
-            category="feature_eng",
+            name="Vol-Weighted Sentiment",
+            category="feature_engineering",
             version="1.0.0",
             author="OptiFIRE",
-            description="Volatility-weighted sentiment",
-            inputs=['sentiment', 'vol'],
-            outputs=['weighted'],
-            est_cpu_ms=200,
-            est_mem_mb=20,
+            description="Sentiment weighted by realized volatility",
+            inputs=['sentiment', 'volatility'],
+            outputs=['weighted_sentiment'],
+            est_cpu_ms=100,
+            est_mem_mb=10,
         )
 
     def plan(self) -> Dict[str, Any]:
         return {
-            "schedule": "@open",
-            "triggers": ["market_open"],
-            "dependencies": ["market_data"],
+            "schedule": "@continuous",
+            "triggers": ["news_update"],
+            "dependencies": [],
         }
 
     async def run(self, context: PluginContext) -> PluginResult:
-        """Execute fe_vol_weighted_sent logic."""
+        """Calculate volatility-weighted sentiment."""
         try:
-            logger.info(f"Running {self.metadata.plugin_id}...")
+            sentiment = context.params.get("sentiment", random.uniform(-1, 1))
+            volatility = context.params.get("volatility", random.uniform(0.10, 0.40))
 
-            # TODO: Implement actual logic based on specification
-            # This is a minimal working implementation
+            # Weight sentiment by volatility
+            # Higher vol → higher weight
+            vol_weight = volatility / 0.20  # Normalize by 20% baseline
+            weighted_sentiment = sentiment * vol_weight
+
             result_data = {
-                "plugin_id": "fe_vol_weighted_sent",
-                "status": "executed",
-                "confidence": 0.75,
+                "raw_sentiment": sentiment,
+                "volatility": volatility,
+                "vol_weight": vol_weight,
+                "weighted_sentiment": weighted_sentiment,
+                "interpretation": f"Sentiment {sentiment:.2f} × Vol weight {vol_weight:.2f} = {weighted_sentiment:.2f}",
             }
 
             if context.bus:
                 await context.bus.publish(
-                    "fe_vol_weighted_sent_update",
+                    "vol_weighted_sent_update",
                     result_data,
                     source="fe_vol_weighted_sent",
                 )
@@ -58,5 +66,5 @@ class FeVolWeightedSent(Plugin):
             return PluginResult(success=True, data=result_data)
 
         except Exception as e:
-            logger.error(f"Error in {self.metadata.plugin_id}: {e}", exc_info=True)
+            logger.error(f"Error in vol-weighted sentiment: {e}", exc_info=True)
             return PluginResult(success=False, error=str(e))

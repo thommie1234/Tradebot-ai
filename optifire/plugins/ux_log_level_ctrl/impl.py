@@ -1,62 +1,82 @@
 """
-ux_log_level_ctrl implementation.
+ux_log_level_ctrl - Dynamic log level control.
 FULL IMPLEMENTATION
 """
 from typing import Dict, Any
+import logging
 from optifire.plugins import Plugin, PluginMetadata, PluginContext, PluginResult
 from optifire.core.logger import logger
 
+
 class UxLogLevelCtrl(Plugin):
     """
-    Log level controller
+    Dynamic log level control.
 
-    Inputs: ['level']
-    Outputs: ['set']
+    Change logging verbosity without restart.
     """
 
     def describe(self) -> PluginMetadata:
         return PluginMetadata(
             plugin_id="ux_log_level_ctrl",
-            name="LOG level controller",
+            name="Log Level Control",
             category="ux",
             version="1.0.0",
             author="OptiFIRE",
-            description="Log level controller",
+            description="Dynamic log level adjustment",
             inputs=['level'],
-            outputs=['set'],
-            est_cpu_ms=100,
-            est_mem_mb=10,
+            outputs=['current_level'],
+            est_cpu_ms=50,
+            est_mem_mb=5,
         )
 
     def plan(self) -> Dict[str, Any]:
         return {
-            "schedule": "@open",
-            "triggers": ["market_open"],
-            "dependencies": ["market_data"],
+            "schedule": "@manual",
+            "triggers": ["log_level_change"],
+            "dependencies": [],
         }
 
     async def run(self, context: PluginContext) -> PluginResult:
-        """Execute ux_log_level_ctrl logic."""
+        """Change log level."""
         try:
-            logger.info(f"Running {self.metadata.plugin_id}...")
+            level = context.params.get("level", None)
 
-            # TODO: Implement actual logic based on specification
-            # This is a minimal working implementation
-            result_data = {
-                "plugin_id": "ux_log_level_ctrl",
-                "status": "executed",
-                "confidence": 0.75,
-            }
+            if level:
+                # Convert string to log level
+                level_map = {
+                    "debug": logging.DEBUG,
+                    "info": logging.INFO,
+                    "warning": logging.WARNING,
+                    "error": logging.ERROR,
+                    "critical": logging.CRITICAL,
+                }
 
-            if context.bus:
-                await context.bus.publish(
-                    "ux_log_level_ctrl_update",
-                    result_data,
-                    source="ux_log_level_ctrl",
-                )
+                level_int = level_map.get(level.lower(), logging.INFO)
+                logger.setLevel(level_int)
+
+                result_data = {
+                    "level": level.upper(),
+                    "interpretation": f"✅ Log level set to {level.upper()}",
+                }
+            else:
+                # Get current level
+                current_level_int = logger.level
+                level_names = {
+                    logging.DEBUG: "DEBUG",
+                    logging.INFO: "INFO",
+                    logging.WARNING: "WARNING",
+                    logging.ERROR: "ERROR",
+                    logging.CRITICAL: "CRITICAL",
+                }
+                current_level = level_names.get(current_level_int, "UNKNOWN")
+
+                result_data = {
+                    "level": current_level,
+                    "interpretation": f"Current log level: {current_level}",
+                }
 
             return PluginResult(success=True, data=result_data)
 
         except Exception as e:
-            logger.error(f"Error in {self.metadata.plugin_id}: {e}", exc_info=True)
+            logger.error(f"Error in log level control: {e}", exc_info=True)
             return PluginResult(success=False, error=str(e))

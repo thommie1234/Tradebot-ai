@@ -1,56 +1,90 @@
 """
-infra_psutil_health implementation.
+infra_psutil_health - System health monitoring.
 FULL IMPLEMENTATION
 """
 from typing import Dict, Any
+import psutil
 from optifire.plugins import Plugin, PluginMetadata, PluginContext, PluginResult
 from optifire.core.logger import logger
 
+
 class InfraPsutilHealth(Plugin):
     """
-    VPS resource monitor
+    System health monitoring.
 
-    Inputs: []
-    Outputs: ['cpu_pct', 'mem_pct']
+    Monitors:
+    - CPU usage
+    - Memory usage
+    - Thread count
+    - Disk space
     """
 
     def describe(self) -> PluginMetadata:
         return PluginMetadata(
             plugin_id="infra_psutil_health",
-            name="VPS resource monitor",
+            name="System Health Monitor",
             category="infrastructure",
             version="1.0.0",
             author="OptiFIRE",
-            description="VPS resource monitor",
+            description="CPU, RAM, disk monitoring via psutil",
             inputs=[],
-            outputs=['cpu_pct', 'mem_pct'],
-            est_cpu_ms=150,
-            est_mem_mb=15,
+            outputs=['cpu_pct', 'memory_pct', 'status'],
+            est_cpu_ms=100,
+            est_mem_mb=10,
         )
 
     def plan(self) -> Dict[str, Any]:
         return {
-            "schedule": "@open",
-            "triggers": ["market_open"],
-            "dependencies": ["market_data"],
+            "schedule": "@continuous",
+            "triggers": ["every_minute"],
+            "dependencies": [],
         }
 
     async def run(self, context: PluginContext) -> PluginResult:
-        """Execute infra_psutil_health logic."""
+        """Check system health."""
         try:
-            logger.info(f"Running {self.metadata.plugin_id}...")
+            # CPU usage
+            cpu_pct = psutil.cpu_percent(interval=0.1)
 
-            # TODO: Implement actual logic based on specification
-            # This is a minimal working implementation
+            # Memory usage
+            memory = psutil.virtual_memory()
+            memory_pct = memory.percent
+
+            # Thread count
+            process = psutil.Process()
+            thread_count = process.num_threads()
+
+            # Disk usage
+            disk = psutil.disk_usage('/')
+            disk_pct = disk.percent
+
+            # Health status
+            status = "healthy"
+            warnings = []
+
+            if cpu_pct > 80:
+                warnings.append("High CPU")
+                status = "warning"
+            if memory_pct > 85:
+                warnings.append("High memory")
+                status = "warning"
+            if disk_pct > 90:
+                warnings.append("Low disk space")
+                status = "critical"
+
             result_data = {
-                "plugin_id": "infra_psutil_health",
-                "status": "executed",
-                "confidence": 0.75,
+                "cpu_pct": cpu_pct,
+                "memory_pct": memory_pct,
+                "thread_count": thread_count,
+                "disk_pct": disk_pct,
+                "status": status,
+                "warnings": warnings,
+                "interpretation": f"{'✅' if status == 'healthy' else '⚠️'} {status.upper()}: CPU {cpu_pct:.1f}%, RAM {memory_pct:.1f}%",
             }
 
             if context.bus:
                 await context.bus.publish(
-                    "infra_psutil_health_update",
+                    "system_health_update",
                     result_data,
                     source="infra_psutil_health",
                 )
@@ -58,5 +92,5 @@ class InfraPsutilHealth(Plugin):
             return PluginResult(success=True, data=result_data)
 
         except Exception as e:
-            logger.error(f"Error in {self.metadata.plugin_id}: {e}", exc_info=True)
+            logger.error(f"Error in health monitor: {e}", exc_info=True)
             return PluginResult(success=False, error=str(e))

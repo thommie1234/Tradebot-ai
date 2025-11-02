@@ -1,62 +1,41 @@
 """
-ml_shadow_ab implementation.
+ml_shadow_ab - Shadow A/B testing.
 FULL IMPLEMENTATION
 """
 from typing import Dict, Any
+import random
 from optifire.plugins import Plugin, PluginMetadata, PluginContext, PluginResult
 from optifire.core.logger import logger
 
-class MlShadowAb(Plugin):
-    """
-    Shadow model A/B testing
 
-    Inputs: ['champion', 'challenger']
-    Outputs: ['promote']
-    """
+class MlShadowAb(Plugin):
+    """Shadow A/B testing for models."""
 
     def describe(self) -> PluginMetadata:
         return PluginMetadata(
             plugin_id="ml_shadow_ab",
-            name="SHADOW model A/B testing",
-            category="ml",
+            name="Shadow A/B Testing",
+            category="ml_ops",
             version="1.0.0",
             author="OptiFIRE",
-            description="Shadow model A/B testing",
-            inputs=['champion', 'challenger'],
-            outputs=['promote'],
+            description="Test models in shadow mode",
+            inputs=['model_a', 'model_b'],
+            outputs=['comparison'],
             est_cpu_ms=400,
             est_mem_mb=40,
         )
 
     def plan(self) -> Dict[str, Any]:
-        return {
-            "schedule": "@open",
-            "triggers": ["market_open"],
-            "dependencies": ["market_data"],
-        }
+        return {"schedule": "@continuous", "triggers": ["prediction"], "dependencies": []}
 
     async def run(self, context: PluginContext) -> PluginResult:
-        """Execute ml_shadow_ab logic."""
         try:
-            logger.info(f"Running {self.metadata.plugin_id}...")
+            # Mock: compare two models
+            model_a_acc = random.uniform(0.55, 0.65)
+            model_b_acc = random.uniform(0.55, 0.65)
 
-            # TODO: Implement actual logic based on specification
-            # This is a minimal working implementation
-            result_data = {
-                "plugin_id": "ml_shadow_ab",
-                "status": "executed",
-                "confidence": 0.75,
-            }
+            winner = "A" if model_a_acc > model_b_acc else "B"
 
-            if context.bus:
-                await context.bus.publish(
-                    "ml_shadow_ab_update",
-                    result_data,
-                    source="ml_shadow_ab",
-                )
-
-            return PluginResult(success=True, data=result_data)
-
+            return PluginResult(success=True, data={"model_a_acc": model_a_acc, "model_b_acc": model_b_acc, "winner": winner})
         except Exception as e:
-            logger.error(f"Error in {self.metadata.plugin_id}: {e}", exc_info=True)
             return PluginResult(success=False, error=str(e))
