@@ -1,16 +1,27 @@
 [Unit]
-Description=OptiFIRE Trading Platform with Auto-Restart
-After=network.target
+Description=OptiFIRE Automated Trading System
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
 WorkingDirectory=/root/optifire
-ExecStart=/bin/bash /root/optifire/monitor.sh
-Restart=always
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/python3 /root/optifire/main.py
+Restart=on-failure
 RestartSec=10
-StandardOutput=append:/tmp/optifire_monitor.log
-StandardError=append:/tmp/optifire_monitor.log
+StandardOutput=append:/tmp/optifire.log
+StandardError=append:/tmp/optifire.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
 
 [Install]
 WantedBy=multi-user.target
