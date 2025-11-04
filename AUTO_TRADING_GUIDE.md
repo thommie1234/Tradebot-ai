@@ -98,10 +98,11 @@ Current: $194 (-3%)
 - Plaatst automatisch market orders
 
 **Position Sizing:**
-- Default: 5% van portfolio per trade
-- Max 10% voor high-confidence trades (>80%)
-- Max 5 posities tegelijk
-- Max 30% totale exposure
+- Default: 8-12% van portfolio per trade
+- Scales with confidence (higher confidence = larger size)
+- Max 15 posities tegelijk
+- Max 15% per symbool
+- Total exposure ~150-225% (usually less with risk multipliers)
 
 ---
 
@@ -172,8 +173,8 @@ OPENAI_API_KEY=sk-xxx...
 ### In code (`auto_trader.py`):
 ```python
 # Position limits
-self.max_positions = 5                  # Max 5 concurrent positions
-self.max_position_size = 0.10           # Max 10% per position
+self.max_positions = 15                 # Max 15 concurrent positions
+self.max_position_size = 0.15           # Max 15% per position
 self.default_take_profit = 0.07         # Take profit at +7%
 self.default_stop_loss = 0.03           # Stop loss at -3%
 ```
@@ -220,9 +221,9 @@ Trades alleen tijdens:
 - Weekends: Geen trades
 
 ### 3. Position Limits
-- Max 5 posities tegelijk
-- Max 10% per symbol
-- Max 30% totale exposure
+- Max 15 posities tegelijk
+- Max 15% per symbol
+- Total exposure ~150-225% (reduced by VIX/drawdown/vol multipliers)
 - Buying power check voor elke order
 
 ### 4. Confidence Thresholds
@@ -338,7 +339,7 @@ tail -f /tmp/optifire.log
 **Oorzaken:**
 - Geen sterke news/catalysts vandaag
 - Confidence < threshold (60%)
-- Max positions bereikt (5)
+- Max positions bereikt (15)
 
 **Oplossing:**
 - Wacht op betere opportunities
@@ -394,10 +395,10 @@ Het systeem is **100% automatisch** en zal:
 
 1. ✅ Elk uur news scannen voor NVDA, TSLA, AAPL, MSFT, GOOGL, META, AMZN
 2. ✅ Elke 4 uur earnings calendar checken
-3. ✅ Automatisch trades plaatsen bij sterke signalen
+3. ✅ Automatisch trades plaatsen bij sterke signalen (BUY en SHORT)
 4. ✅ Automatisch winst nemen bij +7%
 5. ✅ Automatisch verliezen beperken bij -3%
-6. ✅ Maximaal 5 posities tegelijk
+6. ✅ Maximaal 15 posities tegelijk (long + short)
 7. ✅ Alleen tijdens market hours
 
 **Start het systeem maandag morning en laat het werk!** 🚀

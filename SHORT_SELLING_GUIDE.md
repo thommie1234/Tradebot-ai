@@ -119,7 +119,7 @@ Shorts gebruiken **dezelfde risico management** als longs:
 
 ```python
 # Base size
-base_size = 20% van portfolio (standaard)
+base_size = 10% van portfolio (standaard, scaled with confidence)
 
 # Risk adjustments
 final_size = base_size × VIX_multiplier × drawdown_multiplier × vol_multiplier
@@ -186,9 +186,10 @@ AI considers:
 
 **Bot protecties:**
 1. ✅ **Stop losses** (3% standaard)
-2. ✅ **Position size limits** (max 30% per positie)
-3. ✅ **VIX regime detection** (kleiner in volatiele markten)
-4. ✅ **Drawdown de-risking** (stopt bij 8% portfolio drawdown)
+2. ✅ **Position size limits** (max 15% per positie)
+3. ✅ **Max positions** (15 totaal, zowel long als short)
+4. ✅ **VIX regime detection** (kleiner in volatiele markten)
+5. ✅ **Drawdown de-risking** (stopt bij 8% portfolio drawdown)
 
 ### Margin Requirements
 

@@ -34,7 +34,7 @@ class Signal:
         action: str,  # "BUY" (long) or "SHORT" (short)
         confidence: float,  # 0.0 - 1.0
         reason: str,
-        size_pct: float = 0.20,  # % of portfolio (was 0.05)
+        size_pct: float = 0.10,  # % of portfolio (10% default, can hold 15 positions)
         take_profit: Optional[float] = None,  # % gain to take profit
         stop_loss: Optional[float] = None,  # % loss to stop
     ):
@@ -92,10 +92,10 @@ class AutoTrader:
         self.vol_target_multiplier = 1.0  # From vol targeting
 
         # Config
-        self.max_positions = 5
+        self.max_positions = 15          # Can hold up to 15 positions simultaneously
         self.default_take_profit = 0.07  # 7% gain
         self.default_stop_loss = 0.03    # 3% loss
-        self.max_position_size = 0.30    # 30% of portfolio per position (was 10%)
+        self.max_position_size = 0.15    # 15% of portfolio per position (max exposure ~225%, usually less with risk multipliers)
 
     async def start(self):
         """Start the auto-trading engine."""
@@ -280,7 +280,7 @@ class AutoTrader:
                     action="BUY",
                     confidence=0.65,
                     reason=f"📊 SPY-TLT correlation breakdown ({spy_tlt_corr:.2f}), flight to safety expected",
-                    size_pct=0.06,
+                    size_pct=0.08,     # 8% for defensive position
                     take_profit=0.04,  # Bonds move slower
                     stop_loss=0.02,
                 )
@@ -599,7 +599,7 @@ Respond in JSON format:
                 action=action,
                 confidence=0.6,  # Conservative for earnings
                 reason=f"Pre-earnings ({days_until}d): {result[:100]}",
-                size_pct=0.05,
+                size_pct=0.08,     # 8% - smaller size for earnings volatility
                 take_profit=0.08,  # 8% for earnings volatility
                 stop_loss=0.04,    # 4% stop
             )
@@ -629,7 +629,7 @@ Respond in JSON format:
                     action=action,
                     confidence=confidence,
                     reason=f"📰 {reason}",
-                    size_pct=min(0.08, confidence * 0.15),  # Scale with confidence
+                    size_pct=min(0.12, confidence * 0.15),  # Scale with confidence, max 12%
                     take_profit=0.06,
                     stop_loss=0.03,
                 )
