@@ -18,8 +18,9 @@ class OrderRequest:
     """Order request."""
 
     symbol: str
-    qty: float
     side: str
+    qty: Optional[float] = None
+    notional: Optional[float] = None  # Dollar amount for fractional shares
     order_type: str = "market"
     limit_price: Optional[float] = None
     metadata: Optional[Dict] = None
@@ -138,8 +139,11 @@ class OrderExecutor:
             key = f"{req.symbol}_{req.side}_{req.order_type}"
 
             if key in aggregated:
-                # Aggregate quantity
-                aggregated[key].qty += req.qty
+                # Aggregate quantity or notional
+                if req.qty is not None:
+                    aggregated[key].qty = (aggregated[key].qty or 0) + req.qty
+                if req.notional is not None:
+                    aggregated[key].notional = (aggregated[key].notional or 0) + req.notional
             else:
                 aggregated[key] = req
 
@@ -147,39 +151,51 @@ class OrderExecutor:
 
     async def _execute_single(self, request: OrderRequest) -> None:
         """Execute a single aggregated order."""
-        if request.qty == 0:
+        # Skip if both qty and notional are zero/None
+        if (request.qty or 0) == 0 and (request.notional or 0) == 0:
             logger.debug(f"Skipping zero-quantity order for {request.symbol}")
             return
 
-        # Submit to broker
-        order = await self.broker.submit_order(
-            symbol=request.symbol,
-            qty=abs(request.qty),
-            side=request.side,
-            order_type=request.order_type,
-            limit_price=request.limit_price,
-        )
+        # Submit to broker (use notional if specified, otherwise qty)
+        if request.notional:
+            order = await self.broker.submit_order(
+                symbol=request.symbol,
+                notional=round(abs(request.notional), 2),  # Round to 2 decimals
+                side=request.side,
+                order_type=request.order_type,
+                limit_price=request.limit_price,
+            )
+        else:
+            order = await self.broker.submit_order(
+                symbol=request.symbol,
+                qty=abs(request.qty),
+                side=request.side,
+                order_type=request.order_type,
+                limit_price=request.limit_price,
+            )
 
         # Log to database
         await self.db.insert_order({
             "order_id": order["id"],
             "symbol": request.symbol,
             "side": request.side,
-            "qty": request.qty,
+            "qty": request.qty or 0,  # Use 0 for notional orders
             "order_type": request.order_type,
             "status": order.get("status", "pending"),
             "submitted_at": order.get("submitted_at"),
             "metadata": str(request.metadata) if request.metadata else None,
         })
 
+        qty_or_notional = f"{request.qty}" if request.qty else f"${request.notional}"
         logger.info(
-            f"Executed: {request.symbol} {request.side} {request.qty} "
+            f"Executed: {request.symbol} {request.side} {qty_or_notional} "
             f"({request.order_type}) - Order ID: {order['id']}"
         )
 
     def _is_rth(self) -> bool:
         """Check if currently in regular trading hours."""
-        now = datetime.now()
+        import pytz
+        now = datetime.now(pytz.timezone('America/New_York'))
 
         # Check if weekday
         if now.weekday() >= 5:  # Saturday or Sunday

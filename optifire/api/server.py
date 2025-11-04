@@ -13,6 +13,7 @@ from .routes_config import router as config_router
 from .routes_metrics import router as metrics_router
 from .routes_orders import router as orders_router
 from .routes_plugins import router as plugins_router
+from .routes_ai import router as ai_router
 from .sse import router as sse_router
 
 
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
     app.include_router(metrics_router, prefix="/metrics", tags=["metrics"])
     app.include_router(orders_router, prefix="/orders", tags=["orders"])
     app.include_router(plugins_router, prefix="/plugins", tags=["plugins"])
+    app.include_router(ai_router, prefix="/api/ai", tags=["ai"])
     app.include_router(sse_router, prefix="/events", tags=["sse"])
 
     # Main dashboard route

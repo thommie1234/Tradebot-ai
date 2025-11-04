@@ -6,6 +6,7 @@ from typing import List, Optional, Dict, Any
 import httpx
 from datetime import datetime
 import json
+import sqlite3
 
 from optifire.core.logger import logger
 from optifire.core.errors import ExecutionError
@@ -16,9 +17,10 @@ class OpenAIClient:
     OpenAI API client for sentiment analysis, embeddings, and chat.
     """
 
-    def __init__(self):
+    def __init__(self, db_path: str = "/root/optifire/data/optifire.db"):
         """Initialize OpenAI client."""
         self.api_key = os.getenv("OPENAI_API_KEY")
+        self.db_path = db_path
 
         if not self.api_key:
             logger.warning("OpenAI API key not found in environment")
@@ -28,6 +30,95 @@ class OpenAIClient:
             "Authorization": f"Bearer {self.api_key or ''}",
             "Content-Type": "application/json",
         }
+
+        # Initialize conversation logging table
+        self._init_conversation_table()
+
+    def _init_conversation_table(self):
+        """Create table for logging OpenAI conversations."""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS openai_conversations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    purpose TEXT,
+                    prompt TEXT NOT NULL,
+                    response TEXT NOT NULL,
+                    tokens_used INTEGER,
+                    cost_usd REAL,
+                    temperature REAL,
+                    max_tokens INTEGER
+                )
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_conversations_timestamp
+                ON openai_conversations(timestamp DESC)
+            """)
+            conn.commit()
+            conn.close()
+            logger.debug("OpenAI conversation table initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize conversation table: {e}")
+
+    def _log_conversation(
+        self,
+        model: str,
+        purpose: str,
+        prompt: str,
+        response: str,
+        tokens_used: int = 0,
+        cost_usd: float = 0.0,
+        temperature: float = 0.0,
+        max_tokens: int = 0
+    ):
+        """Log conversation to database and file."""
+        try:
+            # Log to database
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO openai_conversations
+                (timestamp, model, purpose, prompt, response, tokens_used, cost_usd, temperature, max_tokens)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                datetime.now().isoformat(),
+                model,
+                purpose,
+                prompt,
+                response,
+                tokens_used,
+                cost_usd,
+                temperature,
+                max_tokens
+            ))
+            conn.commit()
+            conn.close()
+
+            # Also log to file for easy viewing
+            log_dir = "/root/optifire/data/openai_logs"
+            os.makedirs(log_dir, exist_ok=True)
+            log_file = f"{log_dir}/conversations_{datetime.now().strftime('%Y-%m-%d')}.log"
+
+            with open(log_file, "a") as f:
+                f.write(f"\n{'='*80}\n")
+                f.write(f"TIMESTAMP: {datetime.now().isoformat()}\n")
+                f.write(f"MODEL: {model}\n")
+                f.write(f"PURPOSE: {purpose}\n")
+                f.write(f"TEMPERATURE: {temperature}\n")
+                f.write(f"MAX_TOKENS: {max_tokens}\n")
+                f.write(f"TOKENS_USED: {tokens_used}\n")
+                f.write(f"COST: ${cost_usd:.4f}\n")
+                f.write(f"\n--- PROMPT ---\n{prompt}\n")
+                f.write(f"\n--- RESPONSE ---\n{response}\n")
+                f.write(f"{'='*80}\n")
+
+            logger.debug(f"Logged OpenAI conversation: {purpose}")
+
+        except Exception as e:
+            logger.error(f"Failed to log conversation: {e}")
 
     async def chat_completion(
         self,
@@ -229,6 +320,73 @@ Format as JSON:
         except Exception as e:
             logger.error(f"News summarization failed: {e}")
             return f"Failed to summarize news: {str(e)}"
+
+    async def analyze_text(
+        self,
+        prompt: str,
+        temperature: float = 0.3,
+        max_tokens: int = 300,
+        purpose: str = "Text Analysis",
+    ) -> str:
+        """
+        Analyze text with AI and return raw response.
+
+        Args:
+            prompt: The prompt to analyze
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            purpose: Description of what this analysis is for (for logging)
+
+        Returns:
+            Raw text response from AI
+        """
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a financial analyst expert at interpreting market news and sentiment.",
+            },
+            {"role": "user", "content": prompt},
+        ]
+
+        model = "gpt-4o-mini"
+
+        try:
+            response = await self.chat_completion(
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                model=model,
+            )
+
+            content = response["choices"][0]["message"]["content"]
+
+            # Calculate tokens and cost
+            tokens_used = response.get("usage", {}).get("total_tokens", 0)
+            # gpt-4o-mini pricing: $0.150 per 1M input tokens, $0.600 per 1M output tokens
+            input_tokens = response.get("usage", {}).get("prompt_tokens", 0)
+            output_tokens = response.get("usage", {}).get("completion_tokens", 0)
+            cost_usd = (input_tokens * 0.150 / 1_000_000) + (output_tokens * 0.600 / 1_000_000)
+
+            # Log the conversation
+            full_prompt = f"SYSTEM: {messages[0]['content']}\n\nUSER: {prompt}"
+            self._log_conversation(
+                model=model,
+                purpose=purpose,
+                prompt=full_prompt,
+                response=content,
+                tokens_used=tokens_used,
+                cost_usd=cost_usd,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+
+            logger.info(f"OpenAI {purpose}: {tokens_used} tokens, ${cost_usd:.4f}")
+
+            return content
+
+        except Exception as e:
+            logger.error(f"Text analysis failed: {e}")
+            return f"Analysis failed: {str(e)}"
 
     async def generate_trading_signal(
         self,

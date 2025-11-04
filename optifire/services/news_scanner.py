@@ -79,7 +79,7 @@ class NewsScanner:
 
         Returns:
             {
-                "action": "BUY" | "SELL" | "SKIP",
+                "action": "BUY" | "SHORT" | "SKIP",
                 "confidence": 0.0 - 1.0,
                 "reason": "Explanation",
                 "key_headline": "Most important headline"
@@ -116,23 +116,27 @@ Instructions:
    - FDA approvals/rejections
    - Major contracts won/lost
    - Leadership changes
+   - Regulatory issues/lawsuits
 
 2. Determine:
-   - BUY: Strong positive catalyst (high confidence only)
-   - SELL: Strong negative catalyst (high confidence only)
+   - BUY: Strong positive catalyst (high confidence only) - go LONG
+   - SHORT: Strong negative catalyst (high confidence only) - bet against the stock
    - SKIP: No strong catalyst or unclear sentiment
 
 3. Respond in this exact format:
-ACTION: [BUY|SELL|SKIP]
+ACTION: [BUY|SHORT|SKIP]
 CONFIDENCE: [0.0-1.0]
 REASON: [One sentence explanation]
 KEY_HEADLINE: [The most important headline]
 
-Be conservative - only signal BUY/SELL if confidence > 0.7
+Be conservative - only signal BUY/SHORT if confidence > 0.7
 """
 
         try:
-            result = await self.openai.analyze_text(prompt)
+            result = await self.openai.analyze_text(
+                prompt,
+                purpose=f"News Analysis: {symbol}"
+            )
 
             # Parse response
             action = "SKIP"

@@ -28,11 +28,15 @@ class AlpacaBroker:
         if not self.api_key or not self.api_secret:
             logger.warning("Alpaca credentials not found in environment")
 
+        # Trading API endpoint
         self.base_url = (
             "https://paper-api.alpaca.markets"
             if paper
             else "https://api.alpaca.markets"
         )
+
+        # Market data API endpoint (same for paper and live)
+        self.data_url = "https://data.alpaca.markets"
 
         self.headers = {
             "APCA-API-KEY-ID": self.api_key or "",
@@ -192,7 +196,7 @@ class AlpacaBroker:
 
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/v2/stocks/{symbol}/bars",
+                f"{self.data_url}/v2/stocks/{symbol}/bars",
                 headers=self.headers,
                 params=params,
                 timeout=10.0,
@@ -203,12 +207,55 @@ class AlpacaBroker:
 
     async def get_latest_trade(self, symbol: str) -> Dict:
         """Get latest trade."""
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.base_url}/v2/stocks/{symbol}/trades/latest",
-                headers=self.headers,
-                timeout=10.0,
-            )
-            response.raise_for_status()
-            data = response.json()
-            return data.get("trade", {})
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.data_url}/v2/stocks/{symbol}/trades/latest",
+                    headers=self.headers,
+                    timeout=10.0,
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data.get("trade", {})
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.warning(f"Trade data not available for {symbol} (market may be closed)")
+                return {}
+            raise
+
+    async def get_quote(self, symbol: str) -> Dict:
+        """
+        Get latest quote for a symbol.
+
+        Returns:
+            {
+                "ap": ask_price,
+                "bp": bid_price,
+                "as": ask_size,
+                "bs": bid_size
+            }
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.data_url}/v2/stocks/{symbol}/quotes/latest",
+                    headers=self.headers,
+                    timeout=10.0,
+                )
+                response.raise_for_status()
+                data = response.json()
+                return data.get("quote", {})
+        except httpx.HTTPStatusError as e:
+            # Fallback to latest trade if quote not available (e.g., for ETFs)
+            if e.response.status_code == 404:
+                logger.debug(f"Quote not available for {symbol}, falling back to latest trade")
+                trade = await self.get_latest_trade(symbol)
+                # Convert trade to quote format
+                price = trade.get("p", 0)
+                return {
+                    "ap": price,  # Use trade price as both ask and bid
+                    "bp": price,
+                    "as": trade.get("s", 0),
+                    "bs": trade.get("s", 0),
+                }
+            raise
