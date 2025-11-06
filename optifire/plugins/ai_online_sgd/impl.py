@@ -46,8 +46,8 @@ class AiOnlineSgd(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Update model online with new data."""
         try:
-            features = context.params.get("features", None)
-            label = context.params.get("label", None)
+            features = params.get("features", None)
+            label = params.get("label", None)
 
             if features is None:
                 features = np.random.randn(self.n_features)
@@ -71,7 +71,7 @@ class AiOnlineSgd(Plugin):
             result_data = {
                 "prediction": float(prediction),
                 "weights": list(self.weights),
-                "n_updates": context.params.get("n_updates", 0) + 1,
+                "n_updates": params.get("n_updates", 0) + 1,
             }
 
             if context.bus:

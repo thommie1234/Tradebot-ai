@@ -43,7 +43,7 @@ class UxWsPnlSse(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Stream P&L updates via SSE."""
         try:
-            pnl_update = context.params.get("pnl_update", {})
+            pnl_update = params.get("pnl_update", {})
 
             # Broadcast to all subscribers
             for subscriber in self.subscribers:

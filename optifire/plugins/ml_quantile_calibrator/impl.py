@@ -44,8 +44,8 @@ class MlQuantileCalibrator(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calibrate probability."""
         try:
-            raw_prob = context.params.get("raw_probability", 0.7)
-            outcome = context.params.get("outcome", None)
+            raw_prob = params.get("raw_probability", 0.7)
+            outcome = params.get("outcome", None)
 
             # Store calibration data
             if outcome is not None:

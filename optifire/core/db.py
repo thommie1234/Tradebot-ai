@@ -82,7 +82,8 @@ class Database:
                 submitted_at TIMESTAMP,
                 filled_at TIMESTAMP,
                 canceled_at TIMESTAMP,
-                metadata TEXT
+                metadata TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -113,7 +114,9 @@ class Database:
                 confidence REAL,
                 metadata TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP
+                expires_at TIMESTAMP,
+                reason TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 

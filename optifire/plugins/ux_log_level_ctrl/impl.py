@@ -39,7 +39,7 @@ class UxLogLevelCtrl(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Change log level."""
         try:
-            level = context.params.get("level", None)
+            level = params.get("level", None)
 
             if level:
                 # Convert string to log level

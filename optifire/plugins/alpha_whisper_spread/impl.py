@@ -28,7 +28,7 @@ class AlphaWhisperSpread(Plugin):
 
     async def run(self, context: PluginContext) -> PluginResult:
         try:
-            symbol = context.params.get("symbol", "NVDA")
+            symbol = params.get("symbol", "NVDA")
             consensus = 2.50
             whisper = consensus + random.uniform(-0.15, 0.15)
             spread = (whisper - consensus) / consensus if consensus != 0 else 0.0

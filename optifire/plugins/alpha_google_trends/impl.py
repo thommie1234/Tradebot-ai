@@ -43,7 +43,7 @@ class AlphaGoogleTrends(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate Google Trends velocity for symbols."""
         try:
-            symbol = context.params.get("symbol", "NVDA")
+            symbol = params.get("symbol", "NVDA")
 
             # Get trends data (simplified - in production use pytrends)
             trends_data = await self._get_trends_data(symbol)

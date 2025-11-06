@@ -40,8 +40,8 @@ class RiskVolTarget(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate vol target multiplier."""
         try:
-            returns = context.params.get("returns", np.random.normal(0.001, 0.015, 21))
-            target_vol = context.params.get("target_vol", 0.15)
+            returns = params.get("returns", np.random.normal(0.001, 0.015, 21))
+            target_vol = params.get("target_vol", 0.15)
 
             # Calculate current volatility
             current_vol = float(np.std(returns) * np.sqrt(252))

@@ -42,8 +42,8 @@ class DiagSlippageReport(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Track slippage."""
         try:
-            expected_price = context.params.get("expected_price", None)
-            fill_price = context.params.get("fill_price", None)
+            expected_price = params.get("expected_price", None)
+            fill_price = params.get("fill_price", None)
 
             if expected_price and fill_price:
                 # Calculate slippage in basis points

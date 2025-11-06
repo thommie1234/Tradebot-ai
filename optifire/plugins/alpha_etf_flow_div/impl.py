@@ -41,7 +41,7 @@ class AlphaEtfFlowDiv(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Detect ETF flow divergence."""
         try:
-            etf = context.params.get("etf", "SPY")
+            etf = params.get("etf", "SPY")
 
             # Mock: ETF flow and component flow
             etf_flow = random.uniform(-100, 100)  # Million $

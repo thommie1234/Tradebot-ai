@@ -84,9 +84,12 @@ class OrderExecutor:
         Returns:
             Order ID (placeholder until batched)
         """
-        # Check RTH
+        # Check RTH - but still queue the order for later execution
         if self.rth_only and not self._is_rth():
-            raise ExecutionError("Outside regular trading hours")
+            logger.warning(f"⏰ Order queued outside market hours: {request.symbol} {request.side} {request.qty or request.notional}")
+            logger.warning(f"   Order will execute when market opens (9:30 AM - 4:00 PM ET)")
+            # Don't raise error - queue it for later
+            # raise ExecutionError("Outside regular trading hours")
 
         async with self._queue_lock:
             self._order_queue.append(request)
@@ -105,6 +108,13 @@ class OrderExecutor:
 
                 async with self._queue_lock:
                     if not self._order_queue:
+                        continue
+
+                    # Check if we're in market hours
+                    if self.rth_only and not self._is_rth():
+                        # Don't process orders outside market hours
+                        # Keep them in queue for later
+                        logger.debug(f"Skipping batch processing - outside market hours ({len(self._order_queue)} orders queued)")
                         continue
 
                     # Take current batch
@@ -157,34 +167,43 @@ class OrderExecutor:
             return
 
         # Submit to broker (use notional if specified, otherwise qty)
-        if request.notional:
-            order = await self.broker.submit_order(
-                symbol=request.symbol,
-                notional=round(abs(request.notional), 2),  # Round to 2 decimals
-                side=request.side,
-                order_type=request.order_type,
-                limit_price=request.limit_price,
-            )
-        else:
-            order = await self.broker.submit_order(
-                symbol=request.symbol,
-                qty=abs(request.qty),
-                side=request.side,
-                order_type=request.order_type,
-                limit_price=request.limit_price,
-            )
+        try:
+            if request.notional:
+                order = await self.broker.submit_order(
+                    symbol=request.symbol,
+                    notional=round(abs(request.notional), 2),  # Round to 2 decimals
+                    side=request.side,
+                    order_type=request.order_type,
+                    limit_price=request.limit_price,
+                )
+            else:
+                order = await self.broker.submit_order(
+                    symbol=request.symbol,
+                    qty=abs(request.qty),
+                    side=request.side,
+                    order_type=request.order_type,
+                    limit_price=request.limit_price,
+                )
+        except Exception as e:
+            logger.error(f"Broker order failed for {request.symbol}: {e}", exc_info=True)
+            raise
 
-        # Log to database
-        await self.db.insert_order({
-            "order_id": order["id"],
-            "symbol": request.symbol,
-            "side": request.side,
-            "qty": request.qty or 0,  # Use 0 for notional orders
-            "order_type": request.order_type,
-            "status": order.get("status", "pending"),
-            "submitted_at": order.get("submitted_at"),
-            "metadata": str(request.metadata) if request.metadata else None,
-        })
+        # Log to database (optional - don't fail if DB is down)
+        try:
+            if self.db:
+                await self.db.insert_order({
+                    "order_id": order["id"],
+                    "symbol": request.symbol,
+                    "side": request.side,
+                    "qty": request.qty or 0,  # Use 0 for notional orders
+                    "order_type": request.order_type,
+                    "status": order.get("status", "pending"),
+                    "submitted_at": order.get("submitted_at"),
+                    "metadata": str(request.metadata) if request.metadata else None,
+                })
+        except Exception as e:
+            logger.warning(f"Failed to log order to database: {e}")
+            # Don't fail the order if DB fails
 
         qty_or_notional = f"{request.qty}" if request.qty else f"${request.notional}"
         logger.info(

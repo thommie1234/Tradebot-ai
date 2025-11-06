@@ -41,7 +41,7 @@ class AlphaRiskReversal(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate risk reversal."""
         try:
-            symbol = context.params.get("symbol", "SPY")
+            symbol = params.get("symbol", "SPY")
 
             # Mock: 25-delta call and put IVs
             call_iv = 0.20 + random.uniform(-0.03, 0.03)

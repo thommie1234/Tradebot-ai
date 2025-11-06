@@ -40,7 +40,7 @@ class FeWavelet(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Apply wavelet denoising."""
         try:
-            signal = context.params.get("signal", None)
+            signal = params.get("signal", None)
             if signal is None:
                 # Mock noisy signal
                 t = np.linspace(0, 1, 128)

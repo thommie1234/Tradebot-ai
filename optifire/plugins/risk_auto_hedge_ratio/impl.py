@@ -40,9 +40,9 @@ class RiskAutoHedgeRatio(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate automatic hedge ratio."""
         try:
-            portfolio_beta = context.params.get("portfolio_beta", 1.2)
-            portfolio_value = context.params.get("portfolio_value", 10000)
-            spy_price = context.params.get("spy_price", 450.0)
+            portfolio_beta = params.get("portfolio_beta", 1.2)
+            portfolio_value = params.get("portfolio_value", 10000)
+            spy_price = params.get("spy_price", 450.0)
 
             # Hedge ratio = portfolio beta (to neutralize market risk)
             hedge_ratio = portfolio_beta

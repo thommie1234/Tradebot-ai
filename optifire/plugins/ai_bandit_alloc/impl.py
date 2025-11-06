@@ -51,7 +51,7 @@ class AiBanditAlloc(Plugin):
         """Allocate capital using Thompson sampling."""
         try:
             # Update with recent results if provided
-            results = context.params.get("strategy_results", {})
+            results = params.get("strategy_results", {})
             for strategy, result in results.items():
                 if strategy in self.strategies:
                     if result == "win":

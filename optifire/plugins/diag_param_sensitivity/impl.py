@@ -40,8 +40,8 @@ class DiagParamSensitivity(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Analyze parameter sensitivity."""
         try:
-            param_name = context.params.get("param_name", "threshold")
-            param_range = context.params.get("param_range", None)
+            param_name = params.get("param_name", "threshold")
+            param_range = params.get("param_range", None)
 
             if param_range is None:
                 # Mock parameter range

@@ -38,7 +38,7 @@ class UxStrategyPie(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Generate pie chart data."""
         try:
-            allocations = context.params.get("allocations", {
+            allocations = params.get("allocations", {
                 "earnings": 0.35,
                 "news": 0.40,
                 "momentum": 0.25,

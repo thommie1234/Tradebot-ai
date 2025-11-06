@@ -41,8 +41,8 @@ class AlphaVpin(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate VPIN."""
         try:
-            symbol = context.params.get("symbol", "SPY")
-            trades = context.params.get("trades", None)
+            symbol = params.get("symbol", "SPY")
+            trades = params.get("trades", None)
 
             if trades is None:
                 # Mock trade data

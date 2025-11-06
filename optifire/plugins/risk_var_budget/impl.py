@@ -38,8 +38,8 @@ class RiskVarBudget(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Allocate VaR budget."""
         try:
-            total_budget = context.params.get("total_var_budget", 50.0)
-            strategies = context.params.get("strategies", ["earnings", "news", "momentum"])
+            total_budget = params.get("total_var_budget", 50.0)
+            strategies = params.get("strategies", ["earnings", "news", "momentum"])
 
             # Simple equal allocation
             allocation_per_strategy = total_budget / len(strategies)

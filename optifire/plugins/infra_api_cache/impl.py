@@ -44,14 +44,14 @@ class InfraApiCache(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Cache API responses."""
         try:
-            action = context.params.get("action", "get")
-            key = context.params.get("key", "")
-            ttl = context.params.get("ttl", 300)  # 5 minutes
+            action = params.get("action", "get")
+            key = params.get("key", "")
+            ttl = params.get("ttl", 300)  # 5 minutes
 
             if action == "get":
                 result = self._get(key)
             elif action == "set":
-                value = context.params.get("value")
+                value = params.get("value")
                 result = self._set(key, value, ttl)
             elif action == "clear":
                 result = self._clear()

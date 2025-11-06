@@ -40,8 +40,8 @@ class RiskTimeDecaySize(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate time decay multiplier."""
         try:
-            entry_time = context.params.get("entry_time", datetime.now())
-            half_life_hours = context.params.get("half_life_hours", 24)
+            entry_time = params.get("entry_time", datetime.now())
+            half_life_hours = params.get("half_life_hours", 24)
 
             # Calculate time elapsed
             now = datetime.now()

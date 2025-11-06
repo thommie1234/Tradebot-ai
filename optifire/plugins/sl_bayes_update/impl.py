@@ -46,7 +46,7 @@ class SlBayesUpdate(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Update win rate estimate with new trade result."""
         try:
-            trade_result = context.params.get("trade_result", None)
+            trade_result = params.get("trade_result", None)
 
             # Update posterior
             if trade_result == "win":

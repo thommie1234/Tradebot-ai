@@ -41,7 +41,7 @@ class AlphaPositionAgnostic(Plugin):
         """Generate position-agnostic signal."""
         try:
             # Market data (no position info)
-            market_data = context.params.get("market_data", {
+            market_data = params.get("market_data", {
                 "price": 450.0,
                 "volume": 1000000,
                 "volatility": 0.25,

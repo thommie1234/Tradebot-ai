@@ -40,7 +40,7 @@ class DiagOosDecayPlot(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Analyze OOS decay."""
         try:
-            sharpe_ratios = context.params.get("sharpe_ratios", None)
+            sharpe_ratios = params.get("sharpe_ratios", None)
             if sharpe_ratios is None:
                 # Mock: declining Sharpe over time (overfitting indicator)
                 months = np.arange(12)

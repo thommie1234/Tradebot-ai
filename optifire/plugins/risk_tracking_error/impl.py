@@ -42,8 +42,8 @@ class RiskTrackingError(Plugin):
         """Calculate tracking error vs benchmark."""
         try:
             # Get returns (mock data if not provided)
-            portfolio_returns = context.params.get("portfolio_returns", None)
-            benchmark_returns = context.params.get("benchmark_returns", None)
+            portfolio_returns = params.get("portfolio_returns", None)
+            benchmark_returns = params.get("benchmark_returns", None)
 
             if portfolio_returns is None:
                 portfolio_returns = np.random.normal(0.0015, 0.025, 60)  # 60 days

@@ -45,8 +45,8 @@ class SlPerfTrigger(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Check if model needs retraining."""
         try:
-            prediction = context.params.get("prediction", None)
-            actual = context.params.get("actual", None)
+            prediction = params.get("prediction", None)
+            actual = params.get("actual", None)
 
             if prediction is not None and actual is not None:
                 # Check if prediction was correct

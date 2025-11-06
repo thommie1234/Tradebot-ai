@@ -41,8 +41,8 @@ class AlphaCrossAssetCorr(Plugin):
         """Calculate SPY-TLT correlation."""
         try:
             # Mock returns (in production: fetch from broker)
-            spy_returns = context.params.get("spy_returns", np.random.normal(0.001, 0.015, 60))
-            tlt_returns = context.params.get("tlt_returns", np.random.normal(0.0005, 0.01, 60))
+            spy_returns = params.get("spy_returns", np.random.normal(0.001, 0.015, 60))
+            tlt_returns = params.get("tlt_returns", np.random.normal(0.0005, 0.01, 60))
 
             # Calculate correlation
             correlation = float(np.corrcoef(spy_returns, tlt_returns)[0, 1])

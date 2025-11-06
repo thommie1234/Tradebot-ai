@@ -42,12 +42,12 @@ class FeFracdiff(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Apply fractional differentiation."""
         try:
-            prices = context.params.get("prices", None)
+            prices = params.get("prices", None)
             if prices is None:
                 # Mock price data
                 prices = 100 * np.cumprod(1 + np.random.normal(0.001, 0.02, 100))
 
-            d = context.params.get("d", 0.5)  # Fractional order
+            d = params.get("d", 0.5)  # Fractional order
 
             # Apply fractional differentiation
             fracdiff_prices = self._fractional_diff(prices, d)

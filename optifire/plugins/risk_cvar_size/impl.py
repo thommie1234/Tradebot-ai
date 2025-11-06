@@ -42,12 +42,12 @@ class RiskCvarSize(Plugin):
         """Calculate CVaR-based position size."""
         try:
             # Get historical returns (mock data)
-            returns = context.params.get("returns", None)
+            returns = params.get("returns", None)
             if returns is None:
                 # Mock: 252 days of returns
                 returns = np.random.normal(0.001, 0.02, 252)
 
-            confidence_level = context.params.get("confidence_level", 0.95)
+            confidence_level = params.get("confidence_level", 0.95)
 
             # Calculate VaR (95th percentile loss)
             var = np.percentile(returns, (1 - confidence_level) * 100)

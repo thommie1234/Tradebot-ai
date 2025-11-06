@@ -28,7 +28,7 @@ class AlphaTStatThreshold(Plugin):
 
     async def run(self, context: PluginContext) -> PluginResult:
         try:
-            signal_strength = context.params.get("signal", 0.5)
+            signal_strength = params.get("signal", 0.5)
             # Mock t-stat calculation
             t_stat = signal_strength * random.uniform(1.5, 3.5)
             significant = abs(t_stat) > 1.96  # 95% confidence

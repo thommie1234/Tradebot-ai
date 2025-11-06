@@ -40,7 +40,7 @@ class MlEntropyMonitor(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate prediction entropy."""
         try:
-            probabilities = context.params.get("probabilities", [0.5, 0.5])
+            probabilities = params.get("probabilities", [0.5, 0.5])
             probabilities = np.array(probabilities)
 
             # Normalize

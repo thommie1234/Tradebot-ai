@@ -38,7 +38,7 @@ class UxSignalContrib(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Analyze signal contributions."""
         try:
-            signal_pnl = context.params.get("signal_pnl", {
+            signal_pnl = params.get("signal_pnl", {
                 "earnings": 125.50,
                 "news": 89.30,
                 "momentum": -34.20,

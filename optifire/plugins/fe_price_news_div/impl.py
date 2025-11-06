@@ -41,8 +41,8 @@ class FePriceNewsDiv(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Detect price-news divergence."""
         try:
-            price_change = context.params.get("price_change", random.uniform(-0.05, 0.05))
-            news_sentiment = context.params.get("news_sentiment", random.uniform(-1, 1))
+            price_change = params.get("price_change", random.uniform(-0.05, 0.05))
+            news_sentiment = params.get("news_sentiment", random.uniform(-1, 1))
 
             # Normalize
             price_direction = 1 if price_change > 0 else (-1 if price_change < 0 else 0)

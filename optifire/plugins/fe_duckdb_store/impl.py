@@ -40,8 +40,8 @@ class FeDuckdbStore(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Store or retrieve features."""
         try:
-            action = context.params.get("action", "store")
-            features = context.params.get("features", {})
+            action = params.get("action", "store")
+            features = params.get("features", {})
 
             if action == "store":
                 # In production: use DuckDB

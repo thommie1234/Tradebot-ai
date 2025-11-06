@@ -42,9 +42,9 @@ class RiskFracKellyAtten(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate fractional Kelly position size."""
         try:
-            win_rate = context.params.get("win_rate", 0.55)
-            win_loss_ratio = context.params.get("win_loss_ratio", 1.5)
-            confidence = context.params.get("confidence", 0.70)
+            win_rate = params.get("win_rate", 0.55)
+            win_loss_ratio = params.get("win_loss_ratio", 1.5)
+            confidence = params.get("confidence", 0.70)
 
             # Kelly formula: f = (p*b - q) / b
             p = win_rate

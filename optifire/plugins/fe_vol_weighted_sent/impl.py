@@ -40,8 +40,8 @@ class FeVolWeightedSent(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate volatility-weighted sentiment."""
         try:
-            sentiment = context.params.get("sentiment", random.uniform(-1, 1))
-            volatility = context.params.get("volatility", random.uniform(0.10, 0.40))
+            sentiment = params.get("sentiment", random.uniform(-1, 1))
+            volatility = params.get("volatility", random.uniform(0.10, 0.40))
 
             # Weight sentiment by volatility
             # Higher vol → higher weight

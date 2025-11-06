@@ -39,7 +39,7 @@ class FeGarch(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Forecast volatility with GARCH."""
         try:
-            returns = context.params.get("returns", np.random.normal(0.001, 0.015, 100))
+            returns = params.get("returns", np.random.normal(0.001, 0.015, 100))
 
             # Simple GARCH(1,1): σ²(t+1) = ω + α*ε²(t) + β*σ²(t)
             omega = 0.0001

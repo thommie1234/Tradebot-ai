@@ -42,7 +42,7 @@ class AlphaVixRegime(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Classify VIX regime."""
         try:
-            vix = context.params.get("vix_level", 20.0)
+            vix = params.get("vix_level", 20.0)
 
             # Classify regime
             if vix < 15:

@@ -30,7 +30,7 @@ class AiNewsVectors(Plugin):
 
     async def run(self, context: PluginContext) -> PluginResult:
         try:
-            news_text = context.params.get("news_text", "")
+            news_text = params.get("news_text", "")
             # Mock embedding (in production: use sentence-transformers)
             embedding = list(np.random.randn(384))  # 384-dim vector
 

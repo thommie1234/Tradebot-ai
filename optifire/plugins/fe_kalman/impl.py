@@ -40,7 +40,7 @@ class FeKalman(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Apply Kalman filter to signal."""
         try:
-            signal = context.params.get("signal", [])
+            signal = params.get("signal", [])
             if not signal:
                 # Mock data
                 signal = list(np.random.normal(0, 1, 100))

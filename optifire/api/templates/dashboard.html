@@ -44,6 +44,9 @@
                 <div class="nav-item px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-t" onclick="switchTab('risk')">
                     ⚠️ Risk
                 </div>
+                <div class="nav-item px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-t" onclick="switchTab('chat')">
+                    💬 AI Chat
+                </div>
                 <div class="nav-item px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded-t" onclick="switchTab('config')">
                     ⚙️ Config
                 </div>
@@ -252,6 +255,72 @@
                             <div class="text-2xl font-bold text-green-400" id="risk-return">0.0%</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHAT TAB -->
+        <div id="tab-chat" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6">AI Trading Assistant</h2>
+
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Chat Interface -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700 flex flex-col" style="height: 600px;">
+                    <!-- Chat Messages -->
+                    <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <!-- Welcome message -->
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                AI
+                            </div>
+                            <div class="flex-1 bg-gray-700 rounded-lg p-4">
+                                <p class="text-gray-100">Hoi! Ik ben je AI trading assistent. Je kunt mij vragen stellen zoals:</p>
+                                <ul class="mt-2 space-y-1 text-sm text-gray-300">
+                                    <li>• "Waarom is NVDA gekocht?"</li>
+                                    <li>• "Hoeveel winst heb ik gemaakt vandaag?"</li>
+                                    <li>• "Welke kansen heb je gezien?"</li>
+                                    <li>• "Controleer AAPL voor mij"</li>
+                                    <li>• "Wat zijn mijn beste posities?"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="border-t border-gray-700 p-4">
+                        <form id="chat-form" class="flex space-x-3">
+                            <input
+                                type="text"
+                                id="chat-input"
+                                placeholder="Stel je vraag..."
+                                required
+                                class="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                            <button
+                                type="submit"
+                                id="chat-submit"
+                                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Verstuur
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="askQuestion('Hoeveel winst heb ik gemaakt vandaag?')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg p-4 text-left transition-colors">
+                        <div class="text-blue-400 font-semibold mb-1">💰 Dagelijkse Winst</div>
+                        <div class="text-sm text-gray-400">Check je P&L van vandaag</div>
+                    </button>
+                    <button onclick="askQuestion('Wat zijn mijn beste posities?')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg p-4 text-left transition-colors">
+                        <div class="text-green-400 font-semibold mb-1">📈 Beste Posities</div>
+                        <div class="text-sm text-gray-400">Zie je top performers</div>
+                    </button>
+                    <button onclick="askQuestion('Welke kansen heb je gezien deze week?')" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg p-4 text-left transition-colors">
+                        <div class="text-yellow-400 font-semibold mb-1">🎯 Kansen</div>
+                        <div class="text-sm text-gray-400">Ontdekte signalen & kansen</div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -582,6 +651,118 @@
                 console.error('Failed to toggle flag:', e);
             }
         }
+
+        // Chat functionality
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatSubmit = document.getElementById('chat-submit');
+
+        function addMessageToChat(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start space-x-3';
+
+            if (isUser) {
+                // User message (right-aligned)
+                messageDiv.innerHTML = `
+                    <div class="flex-1"></div>
+                    <div class="bg-blue-600 rounded-lg p-4 max-w-2xl">
+                        <p class="text-white">${escapeHtml(content)}</p>
+                    </div>
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">
+                        U
+                    </div>
+                `;
+            } else {
+                // AI message (left-aligned)
+                messageDiv.innerHTML = `
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                        AI
+                    </div>
+                    <div class="flex-1 bg-gray-700 rounded-lg p-4 max-w-2xl">
+                        <p class="text-gray-100 whitespace-pre-wrap">${escapeHtml(content)}</p>
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-message';
+            loadingDiv.className = 'flex items-start space-x-3';
+            loadingDiv.innerHTML = `
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    AI
+                </div>
+                <div class="flex-1 bg-gray-700 rounded-lg p-4">
+                    <p class="text-gray-400 animate-pulse">Aan het denken...</p>
+                </div>
+            `;
+            chatMessages.appendChild(loadingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loadingDiv = document.getElementById('loading-message');
+            if (loadingDiv) loadingDiv.remove();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function askQuestion(question) {
+            // Add user message
+            addMessageToChat(question, true);
+
+            // Show loading
+            addLoadingMessage();
+
+            // Disable input
+            chatInput.disabled = true;
+            chatSubmit.disabled = true;
+
+            try {
+                const response = await fetch('/chat/ask', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({question: question})
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({detail: 'Unknown error'}));
+                    throw new Error(errorData.detail || `HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                removeLoadingMessage();
+                addMessageToChat(data.answer, false);
+
+            } catch (e) {
+                removeLoadingMessage();
+                console.error('Chat error:', e);
+                addMessageToChat('Sorry, er is een fout opgetreden: ' + e.message + '. Probeer het opnieuw of herlaad de pagina.', false);
+            } finally {
+                chatInput.disabled = false;
+                chatSubmit.disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = chatInput.value.trim();
+            if (!question) return;
+
+            chatInput.value = '';
+            await askQuestion(question);
+        });
 
         // Auto refresh
         setInterval(fetchMetrics, 10000);

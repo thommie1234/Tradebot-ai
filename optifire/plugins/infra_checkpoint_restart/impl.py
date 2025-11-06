@@ -46,7 +46,7 @@ class InfraCheckpointRestart(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Save or restore checkpoint."""
         try:
-            action = context.params.get("action", "save")
+            action = params.get("action", "save")
 
             if action == "save":
                 result = await self._save_checkpoint(context)
@@ -63,7 +63,7 @@ class InfraCheckpointRestart(Plugin):
 
     async def _save_checkpoint(self, context):
         """Save current state."""
-        state = context.params.get("state", {})
+        state = params.get("state", {})
 
         checkpoint = {
             "timestamp": datetime.now().isoformat(),

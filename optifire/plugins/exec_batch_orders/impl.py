@@ -46,8 +46,8 @@ class ExecBatchOrders(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Batch execute orders."""
         try:
-            orders = context.params.get("orders", [])
-            flush = context.params.get("flush", False)
+            orders = params.get("orders", [])
+            flush = params.get("flush", False)
 
             # Add orders to queue
             self.order_queue.extend(orders)

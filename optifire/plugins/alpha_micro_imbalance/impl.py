@@ -41,7 +41,7 @@ class AlphaMicroImbalance(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate order book imbalance."""
         try:
-            symbol = context.params.get("symbol", "SPY")
+            symbol = params.get("symbol", "SPY")
 
             # Mock: bid and ask volumes
             bid_volume = random.randint(1000, 10000)

@@ -43,8 +43,8 @@ class ExecMoc(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Place MOC order."""
         try:
-            symbol = context.params.get("symbol", "SPY")
-            qty = context.params.get("qty", 10)
+            symbol = params.get("symbol", "SPY")
+            qty = params.get("qty", 10)
             side = "buy" if qty > 0 else "sell"
             qty = abs(qty)
 

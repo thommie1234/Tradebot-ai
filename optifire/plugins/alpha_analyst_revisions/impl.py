@@ -28,7 +28,7 @@ class AlphaAnalystRevisions(Plugin):
 
     async def run(self, context: PluginContext) -> PluginResult:
         try:
-            symbol = context.params.get("symbol", "AAPL")
+            symbol = params.get("symbol", "AAPL")
             upgrades = random.randint(0, 5)
             downgrades = random.randint(0, 3)
             net_score = upgrades - downgrades

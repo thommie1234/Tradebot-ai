@@ -39,7 +39,7 @@ class UxVarEsPlot(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Generate VaR/ES plot data."""
         try:
-            returns = context.params.get("returns", None)
+            returns = params.get("returns", None)
             if returns is None:
                 # Mock returns
                 returns = np.random.normal(0.001, 0.02, 252)

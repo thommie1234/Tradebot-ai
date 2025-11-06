@@ -43,9 +43,9 @@ class FeDollarBars(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Generate dollar bars."""
         try:
-            prices = context.params.get("prices", None)
-            volumes = context.params.get("volumes", None)
-            threshold = context.params.get("threshold", 100000)  # $100k per bar
+            prices = params.get("prices", None)
+            volumes = params.get("volumes", None)
+            threshold = params.get("threshold", 100000)  # $100k per bar
 
             if prices is None or volumes is None:
                 # Mock tick data

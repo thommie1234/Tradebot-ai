@@ -40,7 +40,7 @@ class AiDtwMatcher(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Find similar patterns via DTW."""
         try:
-            current_pattern = context.params.get("current_pattern", None)
+            current_pattern = params.get("current_pattern", None)
             if current_pattern is None:
                 # Mock: last 10 days of returns
                 current_pattern = np.random.randn(10)

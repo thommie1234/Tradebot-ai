@@ -39,7 +39,7 @@ class UxPnlDrawdownPlot(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Generate P&L and drawdown plots."""
         try:
-            equity_curve = context.params.get("equity_curve", None)
+            equity_curve = params.get("equity_curve", None)
             if equity_curve is None:
                 # Mock equity curve
                 returns = np.random.normal(0.001, 0.02, 252)

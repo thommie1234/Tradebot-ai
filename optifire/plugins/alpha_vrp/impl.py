@@ -40,8 +40,8 @@ class AlphaVrp(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate VRP."""
         try:
-            vix = context.params.get("vix", 20.0)
-            returns = context.params.get("returns", np.random.normal(0.001, 0.015, 21))
+            vix = params.get("vix", 20.0)
+            returns = params.get("returns", np.random.normal(0.001, 0.015, 21))
 
             # Calculate realized volatility (21-day)
             realized_vol = float(np.std(returns) * np.sqrt(252) * 100)

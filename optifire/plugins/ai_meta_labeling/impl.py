@@ -44,8 +44,8 @@ class AiMetaLabeling(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Decide whether to trade based on meta-model."""
         try:
-            primary_signal = context.params.get("primary_signal", 0.6)
-            features = context.params.get("features", {})
+            primary_signal = params.get("primary_signal", 0.6)
+            features = params.get("features", {})
 
             # Mock meta-model prediction
             # In production: train RandomForest on historical trades

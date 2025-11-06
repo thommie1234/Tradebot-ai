@@ -40,9 +40,9 @@ class ExtraBidaskFilter(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Check if spread is acceptable."""
         try:
-            bid = context.params.get("bid", None)
-            ask = context.params.get("ask", None)
-            threshold_pct = context.params.get("threshold_pct", 0.5)
+            bid = params.get("bid", None)
+            ask = params.get("ask", None)
+            threshold_pct = params.get("threshold_pct", 0.5)
 
             if bid is None or ask is None:
                 # Fetch from broker (mock)

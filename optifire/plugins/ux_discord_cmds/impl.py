@@ -41,7 +41,7 @@ class UxDiscordCmds(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Handle Discord command."""
         try:
-            command = context.params.get("command", "!help")
+            command = params.get("command", "!help")
 
             if command == "!pnl":
                 response = self._handle_pnl_command(context)

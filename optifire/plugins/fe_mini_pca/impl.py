@@ -40,8 +40,8 @@ class FeMiniPca(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Apply mini-batch PCA."""
         try:
-            features = context.params.get("features", None)
-            n_components = context.params.get("n_components", 3)
+            features = params.get("features", None)
+            n_components = params.get("n_components", 3)
 
             if features is None:
                 # Mock feature matrix (100 samples, 10 features)

@@ -40,7 +40,7 @@ class FeEntropy(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate signal entropy."""
         try:
-            signal = context.params.get("signal", np.random.randn(100))
+            signal = params.get("signal", np.random.randn(100))
             signal = np.array(signal)
 
             # Discretize signal into bins

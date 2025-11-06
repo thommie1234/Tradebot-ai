@@ -45,7 +45,7 @@ class InfraBrokerLatency(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Track broker latency."""
         try:
-            latency_ms = context.params.get("latency_ms", None)
+            latency_ms = params.get("latency_ms", None)
 
             if latency_ms is not None:
                 self.latency_history.append(latency_ms)

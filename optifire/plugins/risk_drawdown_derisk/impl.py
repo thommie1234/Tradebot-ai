@@ -40,8 +40,8 @@ class RiskDrawdownDerisk(Plugin):
     async def run(self, context: PluginContext) -> PluginResult:
         """Calculate drawdown multiplier."""
         try:
-            equity = context.params.get("equity", 10000)
-            hwm = context.params.get("high_water_mark", 10000)
+            equity = params.get("equity", 10000)
+            hwm = params.get("high_water_mark", 10000)
 
             # Calculate drawdown
             drawdown = (hwm - equity) / hwm if hwm > 0 else 0.0

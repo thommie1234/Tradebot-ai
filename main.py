@@ -185,12 +185,14 @@ def create_app_with_lifespan():
     from fastapi.staticfiles import StaticFiles
     from fastapi.templating import Jinja2Templates
     from fastapi.responses import HTMLResponse
+    from fastapi.middleware.cors import CORSMiddleware
     from pathlib import Path
 
     from optifire.api.routes_config import router as config_router
     from optifire.api.routes_metrics import router as metrics_router
     from optifire.api.routes_orders import router as orders_router
     from optifire.api.routes_plugins import router as plugins_router
+    from optifire.api.routes_chat import router as chat_router
     from optifire.api.sse import router as sse_router
 
     app = FastAPI(
@@ -198,6 +200,15 @@ def create_app_with_lifespan():
         description="Optimized Feature Integration & Risk Engine",
         version="1.0.0",
         lifespan=lifespan,
+    )
+
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # Attach global state
@@ -218,6 +229,7 @@ def create_app_with_lifespan():
     app.include_router(metrics_router, prefix="/metrics", tags=["metrics"])
     app.include_router(orders_router, prefix="/orders", tags=["orders"])
     app.include_router(plugins_router, prefix="/plugins", tags=["plugins"])
+    app.include_router(chat_router, prefix="/chat", tags=["chat"])
     app.include_router(sse_router, prefix="/events", tags=["sse"])
 
     # Main dashboard route
