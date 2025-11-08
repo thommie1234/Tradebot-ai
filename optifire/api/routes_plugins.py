@@ -1,7 +1,9 @@
 """Plugin management routes."""
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
+
+from optifire.api.routes_auth import verify_token
 
 router = APIRouter()
 
@@ -84,8 +86,8 @@ async def get_plugin(plugin_id: str):
 
 
 @router.post("/{plugin_id}/execute")
-async def execute_plugin(plugin_id: str, exec_req: PluginExecuteRequest, request: Request):
-    """Execute a plugin manually."""
+async def execute_plugin(plugin_id: str, exec_req: PluginExecuteRequest, request: Request, user=Depends(verify_token)):
+    """Execute a plugin manually. Requires authentication."""
     try:
         from optifire.plugins import registry, PluginContext
 

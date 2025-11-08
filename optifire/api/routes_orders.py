@@ -1,7 +1,9 @@
 """Order management routes."""
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 from typing import Optional
+
+from optifire.api.routes_auth import verify_token
 
 try:
     from optifire.exec.market_hours import get_market_status
@@ -25,8 +27,8 @@ class OrderRequest(BaseModel):
 
 
 @router.post("/submit")
-async def submit_order(order: OrderRequest, request: Request):
-    """Submit a manual order."""
+async def submit_order(order: OrderRequest, request: Request, user=Depends(verify_token)):
+    """Submit a manual order. Requires authentication."""
     g = request.app.state.g
     broker = g.broker
 
@@ -145,8 +147,8 @@ async def get_order(order_id: str, request: Request):
 
 
 @router.delete("/{order_id}")
-async def cancel_order(order_id: str, request: Request):
-    """Cancel an order."""
+async def cancel_order(order_id: str, request: Request, user=Depends(verify_token)):
+    """Cancel an order. Requires authentication."""
     g = request.app.state.g
     broker = g.broker
 

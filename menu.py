@@ -50,7 +50,7 @@ def start_server():
 
     if check_server_status():
         print(f"{GREEN}✓ Server started successfully!{END}")
-        print(f"Dashboard: http://185.181.8.39:8000")
+        print(f"Dashboard: http://localhost:8000")
     else:
         print(f"{RED}✗ Server failed to start. Check logs.{END}")
 
@@ -106,7 +106,7 @@ def show_status():
     else:
         print(f"  Status: {RED}STOPPED{END}")
 
-    print(f"\n{BOLD}Dashboard:{END} http://185.181.8.39:8000")
+    print(f"\n{BOLD}Dashboard:{END} http://localhost:8000")
 
 def view_logs():
     """View server logs."""
@@ -256,7 +256,7 @@ def view_orders():
 def open_dashboard():
     """Open dashboard in browser."""
     print(f"{YELLOW}Opening dashboard...{END}")
-    print(f"URL: http://185.181.8.39:8000")
+    print(f"URL: http://localhost:8000")
     print(f"\n{YELLOW}Press Enter to continue...{END}")
     input()
 
@@ -294,7 +294,7 @@ def show_menu():
 
 def main():
     """Main menu loop."""
-    os.chdir('/root/optifire')
+    os.chdir('/home/thomas/Tradebot-ai')
 
     while True:
         choice = show_menu()

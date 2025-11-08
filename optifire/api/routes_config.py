@@ -1,7 +1,9 @@
 """Configuration management routes."""
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 from typing import Dict, Any
+
+from optifire.api.routes_auth import verify_token
 
 router = APIRouter()
 
@@ -23,8 +25,8 @@ async def get_runtime_config(request: Request):
 
 
 @router.put("/runtime")
-async def update_runtime_config(update: RuntimeUpdate, request: Request):
-    """Update runtime configuration."""
+async def update_runtime_config(update: RuntimeUpdate, request: Request, user=Depends(verify_token)):
+    """Update runtime configuration. Requires authentication."""
     g = request.app.state.g
     config = g.config
 
@@ -59,8 +61,8 @@ async def get_feature_flags(request: Request):
 
 
 @router.post("/flags/{plugin_id}/toggle")
-async def toggle_flag(plugin_id: str, enabled: bool, request: Request):
-    """Toggle a feature flag."""
+async def toggle_flag(plugin_id: str, enabled: bool, request: Request, user=Depends(verify_token)):
+    """Toggle a feature flag. Requires authentication."""
     g = request.app.state.g
     flags = g.flags
 
@@ -96,8 +98,8 @@ async def get_config_history(request: Request):
 
 
 @router.post("/rollback/{version}")
-async def rollback_config(version: int, request: Request):
-    """Rollback to a previous version."""
+async def rollback_config(version: int, request: Request, user=Depends(verify_token)):
+    """Rollback to a previous version. Requires authentication."""
     g = request.app.state.g
     config = g.config
 

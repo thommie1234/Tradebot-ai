@@ -188,6 +188,7 @@ def create_app_with_lifespan():
     from fastapi.middleware.cors import CORSMiddleware
     from pathlib import Path
 
+    from optifire.api.routes_auth import router as auth_router
     from optifire.api.routes_config import router as config_router
     from optifire.api.routes_metrics import router as metrics_router
     from optifire.api.routes_orders import router as orders_router
@@ -202,14 +203,25 @@ def create_app_with_lifespan():
         lifespan=lifespan,
     )
 
-    # Add CORS middleware
+    # Add CORS middleware with restricted origins
+    allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000").split(",")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
         allow_headers=["*"],
     )
+
+    # Add security middleware
+    from optifire.api.security import RateLimitMiddleware, IPWhitelistMiddleware
+
+    # Rate limiting: 100 requests per minute per IP
+    app.add_middleware(RateLimitMiddleware, requests_per_minute=100)
+
+    # IP whitelist (optional, controlled by IP_WHITELIST env var)
+    if os.getenv("ENABLE_IP_WHITELIST", "false").lower() == "true":
+        app.add_middleware(IPWhitelistMiddleware)
 
     # Attach global state
     app.state.g = g
@@ -225,6 +237,7 @@ def create_app_with_lifespan():
     app.state.templates = Jinja2Templates(directory=str(templates_path))
 
     # Include routers
+    app.include_router(auth_router, prefix="/auth", tags=["auth"])
     app.include_router(config_router, prefix="/config", tags=["config"])
     app.include_router(metrics_router, prefix="/metrics", tags=["metrics"])
     app.include_router(orders_router, prefix="/orders", tags=["orders"])
